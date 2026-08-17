@@ -1,0 +1,1434 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trình Tạo Cấu Trúc LaTeX Pro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
+        .latex-preview { font-family: 'Courier New', Courier, monospace; }
+        /* Custom scrollbar for column containers */
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 4px;}
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    </style>
+</head>
+<body class="h-screen flex flex-col overflow-hidden">
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b border-gray-200 z-10 flex-shrink-0">
+        <div class="max-w-full mx-auto px-4 sm:px-6 lg:px-8 py-3 flex justify-between items-center">
+            <div class="flex items-center gap-2">
+                <div class="bg-blue-600 p-2 rounded-lg text-white">
+                    <i class="fa-solid fa-layer-group text-lg"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold text-gray-900 leading-tight">LaTeX Pro Builder</h1>
+                    <p class="text-xs text-gray-500 font-medium">Hỗ trợ TikZ & Đề Thi 3 Phần & Tự Luận & Chuyên Đề</p>
+                </div>
+            </div>
+            
+            <div class="flex items-center gap-3 w-full md:w-auto flex-wrap md:flex-nowrap justify-end">
+                <!-- Tùy chọn 3 Chế độ (Áp dụng cho Tự luận & Chuyên đề) -->
+                <div id="essayOptionContainer" class="hidden flex items-center gap-2 bg-indigo-50 border border-indigo-200 px-3 py-1.5 rounded-lg">
+                    <span class="text-xs font-bold text-indigo-950 whitespace-nowrap"><i class="fa-solid fa-gears text-amber-500 mr-1"></i>Tùy chọn:</span>
+                    <select id="essaySolutionMode" class="bg-white border border-indigo-300 text-indigo-950 text-xs rounded focus:ring-indigo-500 focus:border-indigo-500 block p-1 outline-none font-semibold cursor-pointer">
+                        <option value="0" selected>📄 Chỉ in Đề</option>
+                        <option value="1">📝 Đề + Dòng kẻ</option>
+                        <option value="2">💡 In Lời giải</option>
+                    </select>
+                </div>
+
+                <!-- Chọn Template Màu Sắc (chỉ áp dụng cho Chuyên Đề & Phiếu Học Tập) -->
+                <div id="topicTemplateContainer" class="hidden items-center gap-2 bg-fuchsia-50 border border-fuchsia-200 px-3 py-1.5 rounded-lg">
+                    <span class="text-xs font-bold text-fuchsia-950 whitespace-nowrap"><i class="fa-solid fa-palette text-fuchsia-500 mr-1"></i>Mẫu:</span>
+                    <select id="topicTemplate" class="bg-white border border-fuchsia-300 text-fuchsia-950 text-xs rounded focus:ring-fuchsia-500 focus:border-fuchsia-500 block p-1 outline-none font-semibold cursor-pointer">
+                        <option value="0" selected>🔵 Xanh Ngọc - Cổ Điển</option>
+                        <option value="1">🟠 Cam Rực - Năng Động</option>
+                        <option value="2">🟣 Tím Sáng Tạo - Hiện Đại</option>
+                    </select>
+                    <span class="text-xs font-bold text-fuchsia-950 whitespace-nowrap ml-1"><i class="fa-solid fa-table-cells-large text-fuchsia-500 mr-1"></i>Bố cục:</span>
+                    <select id="topicLayout" class="bg-white border border-fuchsia-300 text-fuchsia-950 text-xs rounded focus:ring-fuchsia-500 focus:border-fuchsia-500 block p-1 outline-none font-semibold cursor-pointer" title="Ngang 16:9: mỗi câu tối đa 1 trang, chữ đậm cỡ lớn, có phần trống làm bài - dùng khi trình chiếu máy chiếu">
+                        <option value="0" selected>📄 Dọc A4 (Phiếu học tập)</option>
+                        <option value="1">🖥️ Ngang 16:9 (Trình chiếu)</option>
+                    </select>
+                    <span class="text-xs font-bold text-fuchsia-950 whitespace-nowrap ml-1"><i class="fa-solid fa-pen text-fuchsia-500 mr-1"></i>Phần trống:</span>
+                    <select id="topicWritingStyle" class="bg-white border border-fuchsia-300 text-fuchsia-950 text-xs rounded focus:ring-fuchsia-500 focus:border-fuchsia-500 block p-1 outline-none font-semibold cursor-pointer" title="Kiểu phần trống cho học sinh làm bài (chỉ áp dụng khi chọn bố cục Ngang 16:9)">
+                        <option value="0" selected>➖ Dòng kẻ ngang</option>
+                        <option value="1">▦ Ô li mờ</option>
+                    </select>
+                    <input type="text" id="topicTitleInput" placeholder="Tên chuyên đề..." class="bg-white border border-fuchsia-300 text-fuchsia-950 text-xs rounded focus:ring-fuchsia-500 focus:border-fuchsia-500 outline-none p-1 w-32 ml-1" title="Tên chuyên đề hiển thị ở trang/slide đầu tiên">
+                    <input type="text" id="topicTeacherInput" placeholder="Tên giáo viên..." class="bg-white border border-fuchsia-300 text-fuchsia-950 text-xs rounded focus:ring-fuchsia-500 focus:border-fuchsia-500 outline-none p-1 w-28" title="Tên giáo viên hiển thị ở trang/slide đầu tiên và đầu trang">
+                </div>
+
+                <!-- Tùy chọn Trộn Đề (chỉ áp dụng cho Đề Thi 3 Phần) -->
+                <div id="examMixContainer" class="hidden items-center gap-2 bg-purple-50 border border-purple-200 px-3 py-1.5 rounded-lg" title="Đánh dấu đáp án đúng bằng \True trong \choice/\choiceTF; đáp số ngắn lấy từ tham số của \shortans{...}">
+                    <span class="text-xs font-bold text-purple-950 whitespace-nowrap"><i class="fa-solid fa-gears text-amber-500 mr-1"></i>Đáp án:</span>
+                    <select id="examSolutionMode" class="bg-white border border-purple-300 text-purple-950 text-xs rounded focus:ring-purple-500 focus:border-purple-500 block p-1 outline-none font-semibold cursor-pointer">
+                        <option value="0" selected>📄 Chỉ in Đề</option>
+                        <option value="1">✅ Đề + Đáp Án</option>
+                        <option value="2">💡 Đề + Đáp Án + Lời Giải</option>
+                    </select>
+                    <span class="text-xs font-bold text-purple-950 whitespace-nowrap ml-1"><i class="fa-solid fa-shuffle text-purple-500 mr-1"></i>Trộn đề:</span>
+                    <select id="examMixCount" class="bg-white border border-purple-300 text-purple-950 text-xs rounded focus:ring-purple-500 focus:border-purple-500 block p-1 outline-none font-semibold cursor-pointer">
+                        <option value="2">2 mã đề</option>
+                        <option value="4" selected>4 mã đề</option>
+                        <option value="6">6 mã đề</option>
+                        <option value="8">8 mã đề</option>
+                    </select>
+                </div>
+
+                <select id="modeSelect" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2 outline-none font-semibold shadow-sm cursor-pointer">
+                    <option value="tikz">📐 Gom Hình Vẽ (TikZ)</option>
+                    <option value="exam">📝 Đề Thi 3 Phần (Trắc nghiệm + Đúng Sai)</option>
+                    <option value="essay">✍️ Đề Thi Tự Luận (Chuẩn Quốc Gia)</option>
+                    <option value="topic" selected>📚 Chuyên Đề & Phiếu Học Tập (Mẫu Ấn Tượng)</option>
+                </select>
+
+                <a href="https://prism.openai.com/" target="_blank" rel="noopener noreferrer" class="bg-white border border-gray-300 text-gray-700 px-3 py-2 rounded-lg text-sm font-semibold hover:bg-gray-50 transition shadow-sm flex items-center gap-1.5 whitespace-nowrap">
+                    <i class="fa-solid fa-arrow-up-right-from-square text-indigo-500"></i> Prism AI
+                </a>
+                <button onclick="openPromptModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 rounded-lg text-sm font-semibold shadow flex items-center gap-1.5 whitespace-nowrap">
+                    <i class="fa-solid fa-robot"></i> Tạo Prompt AI
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content: 3 Columns -->
+    <main class="flex-1 flex overflow-hidden">
+        
+        <!-- Column 1: Input -->
+        <div class="w-1/3 flex flex-col border-r border-gray-200 bg-white">
+            <div class="p-3 bg-gray-50 border-b border-gray-200 flex justify-between items-center">
+                <h2 class="text-sm font-bold text-gray-700 uppercase tracking-wide">
+                    <span class="bg-gray-200 text-gray-600 px-2 py-0.5 rounded-full mr-1 text-xs">1</span> Nhập Mã Nguồn
+                </h2>
+                <label class="cursor-pointer bg-white border border-gray-300 text-gray-700 px-3 py-1.5 rounded text-xs font-semibold hover:bg-gray-50 transition shadow-sm">
+                    <i class="fa-solid fa-file-upload mr-1 text-blue-500"></i> Tải file .tex
+                    <input type="file" id="fileInput" accept=".tex,.txt" class="hidden">
+                </label>
+            </div>
+            <div class="flex-1 p-3">
+                <textarea id="inputLatex" class="w-full h-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none resize-none font-mono text-sm custom-scrollbar" placeholder="Dán mã LaTeX của bạn vào đây...&#10;&#10;Hỗ trợ:&#10;- \begin{tikzpicture}...&#10;- \begin{ex}...&#10;- \begin{bt}..."></textarea>
+            </div>
+            <div class="p-3 bg-white border-t border-gray-200">
+                <button onclick="parseContent()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-4 rounded-lg transition-colors shadow flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-microchip"></i> Phân Tích & Bóc Tách
+                </button>
+            </div>
+        </div>
+
+        <!-- Column 2: Preview & Select -->
+        <div class="w-1/3 flex flex-col border-r border-gray-200 bg-gray-50">
+            <div class="p-3 bg-white border-b border-gray-200 flex justify-between items-center">
+                <h2 class="text-sm font-bold text-gray-700 uppercase tracking-wide">
+                    <span class="bg-gray-200 text-gray-600 px-2 py-0.5 rounded-full mr-1 text-xs">2</span> Chọn Lọc
+                </h2>
+                <div class="text-xs font-medium text-gray-500" id="selectionCount">0 mục</div>
+            </div>
+            <div id="previewContainer" class="flex-1 overflow-y-auto p-3 space-y-3 custom-scrollbar">
+                <div class="h-full flex flex-col items-center justify-center text-gray-400 space-y-3">
+                    <i class="fa-regular fa-clipboard text-4xl opacity-50"></i>
+                    <p class="text-sm">Nhấn "Phân Tích" để xem trước</p>
+                </div>
+            </div>
+            <div class="p-3 bg-white border-t border-gray-200">
+                <button onclick="generateLatex()" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2.5 px-4 rounded-lg transition-colors shadow flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i> Tạo File Main.tex
+                </button>
+            </div>
+        </div>
+
+        <!-- Column 3: Output -->
+        <div class="w-1/3 flex flex-col bg-white">
+            <div class="p-3 bg-gray-50 border-b border-gray-200 flex justify-between items-center">
+                <h2 class="text-sm font-bold text-gray-700 uppercase tracking-wide">
+                    <span class="bg-green-200 text-green-700 px-2 py-0.5 rounded-full mr-1 text-xs">3</span> Kết Quả
+                </h2>
+                <div class="flex gap-2">
+                    <button id="btnMixExam" onclick="mixExamAndExport()" class="hidden bg-purple-600 hover:bg-purple-700 text-white px-3 py-1.5 rounded text-xs font-semibold transition shadow-sm">
+                        <i class="fa-solid fa-shuffle"></i> Trộn Đề + Đáp Án
+                    </button>
+                    <button onclick="copyToClipboard()" class="bg-white border border-gray-300 text-gray-700 px-3 py-1.5 rounded text-xs font-semibold hover:bg-gray-50 transition shadow-sm">
+                        <i class="fa-regular fa-copy text-blue-600"></i> Copy
+                    </button>
+                    <button onclick="downloadTex()" class="bg-white border border-gray-300 text-gray-700 px-3 py-1.5 rounded text-xs font-semibold hover:bg-gray-50 transition shadow-sm">
+                        <i class="fa-solid fa-download text-green-600"></i> .tex
+                    </button>
+                </div>
+            </div>
+            <div class="flex-1 p-3">
+                <textarea id="outputLatex" class="w-full h-full p-3 border border-gray-300 rounded-lg bg-gray-50 outline-none resize-none font-mono text-sm latex-preview custom-scrollbar" readonly placeholder="Mã nguồn Main.tex sẽ xuất hiện ở đây..."></textarea>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Notification Toast -->
+    <div id="toast" class="fixed bottom-5 right-5 transform translate-y-20 opacity-0 transition-all duration-300 bg-gray-900 text-white px-4 py-3 rounded-lg shadow-lg flex items-center gap-3 z-50">
+        <i id="toastIcon" class="fa-solid fa-circle-check text-green-400"></i>
+        <span id="toastMsg" class="font-medium text-sm">Thành công!</span>
+    </div>
+
+    <!-- Modal: Tạo Prompt AI cho Phiếu Học Tập -->
+    <div id="promptModal" class="hidden fixed inset-0 bg-black/50 z-50 items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto custom-scrollbar">
+            <div class="p-4 border-b border-gray-200 flex justify-between items-center sticky top-0 bg-white z-10">
+                <h2 class="text-lg font-bold text-gray-800"><i class="fa-solid fa-robot text-indigo-600 mr-2"></i>Tạo Prompt AI - Phiếu Học Tập Toán</h2>
+                <button onclick="closePromptModal()" class="text-gray-400 hover:text-gray-700 text-xl leading-none">&times;</button>
+            </div>
+            <div class="p-5 space-y-4">
+                <p class="text-xs text-gray-500 -mt-1">Điền thông tin bên dưới, bấm "Tạo Prompt", sau đó copy prompt và dán vào AI (VD: <a href="https://prism.openai.com/" target="_blank" rel="noopener noreferrer" class="text-indigo-600 underline">Prism AI</a>). Dán kết quả AI trả về vào ô "Nhập Mã Nguồn" ở cột 1 để tiếp tục xử lý như bình thường.</p>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="text-xs font-bold text-gray-600">Chủ đề / Chuyên đề</label>
+                        <input type="text" id="pfTopic" placeholder="VD: Hàm số bậc hai" class="w-full border border-gray-300 rounded-lg p-2 text-sm mt-1 outline-none focus:ring-2 focus:ring-indigo-400">
+                    </div>
+                    <div>
+                        <label class="text-xs font-bold text-gray-600">Khối lớp</label>
+                        <select id="pfGrade" class="w-full border border-gray-300 rounded-lg p-2 text-sm mt-1 outline-none focus:ring-2 focus:ring-indigo-400">
+                            <option value="9">Lớp 9</option>
+                            <option value="10" selected>Lớp 10</option>
+                            <option value="11">Lớp 11</option>
+                            <option value="12">Lớp 12</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="text-xs font-bold text-gray-600 block mb-1">Số lượng câu theo từng dạng</label>
+                    <div class="grid grid-cols-3 gap-3">
+                        <div>
+                            <label class="text-xs text-gray-500">Trắc nghiệm 1 đáp án</label>
+                            <input type="number" id="pfCountMC" value="4" min="0" class="w-full border border-gray-300 rounded-lg p-2 text-sm mt-1 outline-none focus:ring-2 focus:ring-indigo-400">
+                        </div>
+                        <div>
+                            <label class="text-xs text-gray-500">Đúng - Sai</label>
+                            <input type="number" id="pfCountTF" value="2" min="0" class="w-full border border-gray-300 rounded-lg p-2 text-sm mt-1 outline-none focus:ring-2 focus:ring-indigo-400">
+                        </div>
+                        <div>
+                            <label class="text-xs text-gray-500">Trả lời ngắn</label>
+                            <input type="number" id="pfCountSA" value="4" min="0" class="w-full border border-gray-300 rounded-lg p-2 text-sm mt-1 outline-none focus:ring-2 focus:ring-indigo-400">
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="text-xs font-bold text-gray-600 block mb-1">Phân hóa theo mức độ nhận thức (%) - đảm bảo đủ cho mọi đối tượng học sinh</label>
+                    <div class="grid grid-cols-4 gap-3">
+                        <div>
+                            <label class="text-xs text-gray-500">Nhận biết</label>
+                            <input type="number" id="pfLevelNB" value="30" min="0" max="100" class="w-full border border-gray-300 rounded-lg p-2 text-sm mt-1 outline-none focus:ring-2 focus:ring-indigo-400">
+                        </div>
+                        <div>
+                            <label class="text-xs text-gray-500">Thông hiểu</label>
+                            <input type="number" id="pfLevelTH" value="30" min="0" max="100" class="w-full border border-gray-300 rounded-lg p-2 text-sm mt-1 outline-none focus:ring-2 focus:ring-indigo-400">
+                        </div>
+                        <div>
+                            <label class="text-xs text-gray-500">Vận dụng</label>
+                            <input type="number" id="pfLevelVD" value="25" min="0" max="100" class="w-full border border-gray-300 rounded-lg p-2 text-sm mt-1 outline-none focus:ring-2 focus:ring-indigo-400">
+                        </div>
+                        <div>
+                            <label class="text-xs text-gray-500">Vận dụng cao</label>
+                            <input type="number" id="pfLevelVDC" value="15" min="0" max="100" class="w-full border border-gray-300 rounded-lg p-2 text-sm mt-1 outline-none focus:ring-2 focus:ring-indigo-400">
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="text-xs font-bold text-gray-600">Yêu cầu thêm (tuỳ chọn)</label>
+                    <textarea id="pfNotes" rows="2" placeholder="VD: có hình vẽ TikZ minh hoạ, ưu tiên bài toán thực tế, tránh số xấu..." class="w-full border border-gray-300 rounded-lg p-2 text-sm mt-1 outline-none focus:ring-2 focus:ring-indigo-400 resize-none"></textarea>
+                </div>
+
+                <button onclick="generateWorksheetPrompt()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-lg shadow flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i> Tạo Prompt
+                </button>
+
+                <div>
+                    <div class="flex justify-between items-center mb-1">
+                        <label class="text-xs font-bold text-gray-600">Prompt đã tạo</label>
+                        <div class="flex gap-2">
+                            <button onclick="copyPromptOutput()" class="bg-white border border-gray-300 text-gray-700 px-2 py-1 rounded text-xs font-semibold hover:bg-gray-50"><i class="fa-regular fa-copy text-blue-600"></i> Copy</button>
+                            <a href="https://prism.openai.com/" target="_blank" rel="noopener noreferrer" class="bg-indigo-50 border border-indigo-300 text-indigo-700 px-2 py-1 rounded text-xs font-semibold hover:bg-indigo-100"><i class="fa-solid fa-arrow-up-right-from-square"></i> Mở Prism AI</a>
+                        </div>
+                    </div>
+                    <textarea id="pfOutput" rows="12" readonly placeholder="Bấm 'Tạo Prompt' để xem nội dung..." class="w-full border border-gray-300 rounded-lg p-2 text-xs font-mono bg-gray-50 custom-scrollbar outline-none resize-none"></textarea>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- DATA PREAMBLE ---
+        const tikzPreamble = `\\documentclass[12pt,a4paper]{article}
+\\usepackage[utf8]{vietnam}
+\\usepackage[margin=1.5cm]{geometry}
+\\usepackage{amsmath,amssymb}
+\\usepackage{fontawesome5}
+\\usepackage{tikz,tkz-euclide,tkz-tab}
+\\usetikzlibrary{angles,intersections,shapes.geometric,arrows,decorations.markings,arrows.meta,patterns.meta,shadows.blur,patterns,quotes,bending,matrix}
+\\usepackage{tikz-3dplot}
+\\usepackage{etoolbox}
+\\BeforeBeginEnvironment{tikzpicture}{%
+    \\vspace{0.5cm}%
+    \\begin{center}%
+}
+\\AfterEndEnvironment{tikzpicture}{%
+    \\par\\vspace{1.5ex}%
+    \\stepcounter{figure}%
+    \\textbf{Hình \\thefigure}%
+    \\end{center}%
+    \\vspace{0.2cm}%
+    \\hrule
+    \\vspace{0.2cm}%
+}`;
+
+        const tikzHeader = `\\begin{center}
+    \\Large\\textbf{TỔNG HỢP CÁC HÌNH VẼ ĐỀ KIỂM TRA} \\\\
+    \\normalsize\\textit{(Tự động đánh số và định dạng tối ưu cho Web)}
+\\end{center}
+\\vspace{0.5cm}
+\\hrule
+`;
+
+        const getExamPreamble = (dapanMode) => `\\documentclass[11pt,a4paper]{article}
+\\usepackage[utf8]{vietnam}
+\\usepackage[left=1.5cm,right=1.3cm,top=1.55cm,bottom=1.55cm,headsep=5mm,footskip=8mm]{geometry}
+\\usepackage{amsmath,amssymb,amsfonts}
+\\usepackage{xcolor}
+\\usepackage{enumitem}
+\\usepackage{fontawesome5}
+\\usepackage{tcolorbox}
+\\tcbuselibrary{breakable,skins}
+\\usepackage{paracol}
+\\usepackage{graphicx}
+\\usepackage{fancyhdr}
+\\usepackage{lastpage}
+\\usepackage{titlesec}
+\\usepackage{tabularx,array}
+
+% --- TikZ Libraries ---
+\\usepackage{tikz,tkz-euclide,tkz-tab}
+\\usetikzlibrary{angles,intersections,shapes.geometric,arrows,decorations.markings,arrows.meta,patterns.meta,shadows.blur,patterns,quotes,bending,matrix}
+\\usepackage{tikz-3dplot}
+
+\\newif\\ifshowanswers
+\\newif\\ifshowsolutions
+\\newcommand{\\hienthidapan}{\\showanswerstrue}
+\\newcommand{\\andapan}{\\showanswersfalse}
+\\newcommand{\\hienthiloigiai}{\\showsolutionstrue\\showanswerstrue}
+\\newcommand{\\anloigiai}{\\showsolutionsfalse}
+
+% ============================================================
+% HƯỚNG DẪN ẨN/HIỆN ĐÁP ÁN - LỜI GIẢI
+% Đổi số trong \\def\\dapanmode{...} bên dưới thành 0, 1 hoặc 2:
+%   0 = CHỈ IN ĐỀ                  (ẩn đáp án & lời giải)
+%   1 = IN ĐỀ + ĐÁP ÁN             (hiện đáp án đúng, ẩn lời giải chi tiết)
+%   2 = IN ĐỀ + ĐÁP ÁN + LỜI GIẢI  (hiện đầy đủ đáp án và lời giải chi tiết)
+% ============================================================
+\\def\\dapanmode{${dapanMode}}
+\\ifcase\\dapanmode
+    \\andapan\\anloigiai
+\\or
+    \\hienthidapan\\anloigiai
+\\or
+    \\hienthiloigiai
+\\fi
+
+\\newcounter{ex}
+\\newenvironment{ex}[1][]{
+    \\par\\addvspace{4pt}
+    \\refstepcounter{ex}
+    \\noindent\\textbf{\\color{blue!65!black}Câu \\theex.}\\enspace\\ignorespaces
+}{
+    \\par\\addvspace{2pt}
+}
+
+\\newcommand{\\choice}[4]{
+    \\par\\smallskip\\noindent
+    \\begin{tabular}{@{}p{0.48\\linewidth}@{}p{0.48\\linewidth}@{}}
+        \\textbf{A.}~#1 & \\textbf{B.}~#2\\\\[-1pt]
+        \\textbf{C.}~#3 & \\textbf{D.}~#4
+    \\end{tabular}\\par
+}
+\\newcommand{\\choicefour}[4]{
+    \\par\\smallskip\\noindent
+    \\begin{tabular}{@{}p{0.24\\linewidth}@{}p{0.24\\linewidth}@{}p{0.24\\linewidth}@{}p{0.24\\linewidth}@{}}
+        \\textbf{A.}~#1 & \\textbf{B.}~#2 & \\textbf{C.}~#3 & \\textbf{D.}~#4
+    \\end{tabular}\\par
+}
+\\newcommand{\\choiceone}[4]{
+    \\begin{enumerate}[label=\\textbf{\\Alph*.},leftmargin=9mm,labelsep=2mm,itemsep=0pt,topsep=2pt]
+        \\item #1 \\item #2 \\item #3 \\item #4
+    \\end{enumerate}
+}
+
+\\newcommand{\\choiceTF}[4]{
+    \\begin{enumerate}[label=\\textbf{\\alph*)},leftmargin=8mm,labelsep=2mm,itemsep=0pt,topsep=2pt]
+        \\item #1
+        \\item #2
+        \\item #3
+        \\item #4
+    \\end{enumerate}
+}
+
+\\newcommand{\\shortans}[2][]{%
+    \\par\\nobreak\\smallskip\\noindent\\textbf{Đáp số: }%
+    \\ifshowanswers
+        \\tcbox[colback=green!8,colframe=green!50!black,boxrule=.5pt,arc=1mm,left=2mm,right=2mm,top=.5mm,bottom=.5mm]{\\textcolor{green!40!black}{\\textbf{#2}}}%
+    \\else
+        \\makebox[4cm]{\\dotfill}%
+    \\fi
+}
+
+\\newcommand{\\loigiai}[2][]{
+    \\ifshowsolutions
+        \\begin{tcolorbox}[enhanced,breakable,colback=yellow!4,colframe=orange!65!black,title={\\faLightbulb\\quad Lời giải},fonttitle=\\bfseries,boxrule=.6pt,arc=1mm,left=2mm,right=2mm,top=1mm,bottom=1mm,before skip=6pt,after skip=3pt]
+            #2
+        \\end{tcolorbox}
+    \\fi
+}
+
+\\newcommand{\\True}{\\ifshowanswers\\textcolor{green!50!black}{\\faCheckCircle}\\;\\fi}
+\\newcommand{\\immini}[3][]{
+    \\par\\noindent
+    \\begin{minipage}[c]{0.55\\textwidth}
+        #2
+    \\end{minipage}
+    \\hfill
+    \\begin{minipage}[c]{0.4\\textwidth}
+        \\begin{center}
+            #3
+        \\end{center}
+    \\end{minipage}\\par\\vspace{5pt}
+}
+
+\\newenvironment{itemchoice}{
+    \\begin{enumerate}[label=\\textbf{\\alph*)},leftmargin=1cm,itemsep=2pt]
+}{
+    \\end{enumerate}
+}
+\\newcommand{\\itemch}{\\item}
+\\newcommand{\\heva}[1]{\\left\\{\\begin{matrix}#1\\end{matrix}\\right.}
+\\newcommand{\\hoac}[1]{\\left[\\begin{matrix}#1\\end{matrix}\\right.}
+
+\\newcommand{\\khungct}[1]{#1}
+\\newcommand{\\khung}[1]{#1}
+\\def\\chongbang{}
+\\def\\xuongdong{\\break}
+
+\\newcounter{bt}
+\\newenvironment{bt}[1][]{
+    \\par\\addvspace{4pt}
+    \\refstepcounter{bt}
+    \\noindent\\textbf{\\color{orange!75!black}Câu \\thebt.}\\enspace\\ignorespaces
+}{
+    \\par\\addvspace{2pt}
+}
+
+\\setlength{\\parindent}{0pt}
+\\setlength{\\parskip}{2pt}
+\\setlist{nosep}
+
+\\titleformat{\\section}{\\large\\bfseries\\sffamily\\color{blue!60!black}}{}{0pt}{}[\\vspace{2pt}\\titlerule]
+\\titleformat{\\subsection}{\\large\\bfseries\\sffamily\\color{blue!55!black}}{}{0pt}{}
+\\titlespacing*{\\section}{0pt}{6pt}{4pt}
+\\titlespacing*{\\subsection}{0pt}{10pt}{5pt}
+
+\\pagestyle{fancy}
+\\fancyhf{}
+\\fancyhead[L]{\\small\\sffamily ÔN TẬP THPT QUỐC GIA}
+\\fancyhead[R]{\\small\\sffamily Môn: Toán}
+\\fancyfoot[L]{\\small\\sffamily Lớp Toán Thầy Vũ Tiến Lực - NHC}
+\\fancyfoot[R]{\\small\\sffamily Trang \\thepage/\\pageref{LastPage}}
+\\renewcommand{\\headrulewidth}{0.4pt}
+\\renewcommand{\\footrulewidth}{0.4pt}
+\\setlength{\\headheight}{16pt}`;
+
+        const examHeader = `\\begin{tcolorbox}[
+    enhanced,colback=white,colframe=blue!65!black,boxrule=1pt,arc=1mm,
+    left=3mm,right=3mm,top=2mm,bottom=2mm]
+    \\begin{minipage}[t]{0.32\\textwidth}
+        \\centering\\sffamily
+        \\textbf{TRƯỜNG THPT}\\par
+        \\textbf{NGUYỄN HỮU CẢNH}\\par
+        \\rule{3.5cm}{0.4pt}
+    \\end{minipage}
+    \\hfill
+    \\begin{minipage}[t]{0.63\\textwidth}
+        \\centering\\sffamily
+        {\\large\\bfseries ĐỀ ÔN TẬP THI TỐT NGHIỆP THPT}\\par
+        \\textbf{Môn: TOÁN}\\par
+        \\textit{Thời gian làm bài: 90 phút, không kể thời gian phát đề}
+    \\end{minipage}
+\\end{tcolorbox}
+
+\\noindent\\textbf{Họ và tên thí sinh:} \\dotfill
+\\hfill\\textbf{Số báo danh:} \\makebox[3cm]{\\dotfill}
+
+\\ifshowsolutions
+    \\begin{center}\\color{red!70!black}\\bfseries\\sffamily BẢN GIÁO VIÊN -- CÓ ĐÁP ÁN VÀ LỜI GIẢI\\end{center}
+\\else\\ifshowanswers
+    \\begin{center}\\color{green!40!black}\\bfseries\\sffamily BẢN ĐÁP ÁN\\end{center}
+\\fi\\fi
+
+\\begin{tcolorbox}[colback=gray!5,colframe=gray!45,boxrule=.5pt,arc=1mm]
+    \\small\\textbf{Cấu trúc đề:} Phần I gồm câu trắc nghiệm một phương án đúng;
+    Phần II gồm câu trắc nghiệm đúng--sai; Phần III gồm câu trả lời ngắn.
+\\end{tcolorbox}`;
+
+        const getEssayPreamble = (solMode) => `\\documentclass[11pt,a4paper]{article}
+\\usepackage[utf8]{vietnam}
+\\usepackage[left=1.5cm,right=1.5cm,top=1.5cm,bottom=1.5cm,headsep=6mm,footskip=8mm]{geometry}
+\\usepackage{amsmath,amssymb,amsfonts}
+\\usepackage{xcolor}
+\\usepackage{enumitem}
+\\usepackage{fontawesome5}
+\\usepackage{tcolorbox}
+\\tcbuselibrary{breakable,skins}
+\\usepackage{graphicx}
+\\usepackage{fancyhdr}
+\\usepackage{lastpage}
+
+\\usepackage{tikz,tkz-euclide,tkz-tab}
+\\usetikzlibrary{angles,intersections,shapes.geometric,arrows,decorations.markings,arrows.meta,patterns.meta,shadows.blur,patterns,quotes,bending,matrix}
+\\usepackage{tikz-3dplot}
+
+\\def\\solmode{${solMode}}
+
+\\newcounter{ex}
+\\newenvironment{ex}[1][]{
+    \\par\\addvspace{6pt}
+    \\refstepcounter{ex}
+    \\noindent\\textbf{Câu \\theex.}\\enspace\\ignorespaces
+}{
+    \\par\\addvspace{2pt}
+}
+
+\\newcounter{bt}
+\\newenvironment{bt}[1][]{
+    \\par\\addvspace{6pt}
+    \\refstepcounter{bt}
+    \\noindent\\textbf{Bài \\thebt.}\\enspace\\ignorespaces
+}{
+    \\par\\addvspace{2pt}
+}
+
+\\newbox\\solbox
+\\newcommand{\\loigiai}[2][]{%
+    \\ifcase\\solmode
+    \\or
+        \\setbox\\solbox=\\vbox{\\parindent=0pt\\hsize=\\linewidth #2}%
+        \\pgfmathsetmacro{\\numlines}{int(max(2, \\ht\\solbox/18pt + 1))}%
+        \\par\\vspace{4pt}
+        \\foreach \\n in {1,...,\\numlines} {\\noindent\\makebox[\\linewidth]{\\dotfill}\\par\\vspace{6pt}}
+        \\par\\vspace{2pt}
+    \\or
+        \\begin{tcolorbox}[
+            enhanced,breakable,colback=white,colframe=black,
+            title={\\textbf{Lời giải:}},fonttitle=\\bfseries,
+            boxrule=0.5pt,arc=0mm,left=2mm,right=2mm,top=1mm,bottom=1mm,
+            before skip=4pt,after skip=4pt,
+            coltitle=black,
+            boxed title style={colback=white,boxrule=0pt}
+        ]
+            #2
+        \\end{tcolorbox}
+    \\fi
+}
+
+\\newcommand{\\immini}[3][]{
+    \\par\\noindent
+    \\begin{minipage}[c]{0.55\\textwidth}
+        #2
+    \\end{minipage}
+    \\hfill
+    \\begin{minipage}[c]{0.4\\textwidth}
+        \\begin{center}
+            #3
+        \\end{center}
+    \\end{minipage}\\par\\vspace{5pt}
+}
+
+\\newcommand{\\heva}[1]{\\left\\{\\begin{matrix}#1\\end{matrix}\\right.}
+\\newcommand{\\hoac}[1]{\\left[\\begin{matrix}#1\\end{matrix}\\right.}
+
+\\setlength{\\parindent}{0pt}
+\\setlength{\\parskip}{2pt}
+
+\\pagestyle{fancy}
+\\fancyhf{}
+\\fancyhead[L]{\\small\\sffamily\\bfseries ĐỀ KIỂM TRA TỰ LUẬN}
+\\fancyhead[R]{\\small\\sffamily Lớp Toán Thầy Vũ Tiến Lực - NHC}
+\\fancyfoot[C]{\\small\\sffamily Trang \\thepage/\\pageref{LastPage}}
+\\renewcommand{\\headrulewidth}{0.5pt}
+\\renewcommand{\\footrulewidth}{0.4pt}
+\\setlength{\\headheight}{16pt}`;
+
+        const essayHeader = `\\noindent
+\\begin{minipage}[t]{0.4\\textwidth}
+    \\centering
+    \\textbf{TRƯỜNG THPT NGUYỄN HỮU CẢNH}\\\\
+    \\textbf{TỔ TOÁN}\\\\
+    \\rule{3cm}{0.5pt}
+\\end{minipage}
+\\hfill
+\\begin{minipage}[t]{0.55\\textwidth}
+    \\centering
+    \\textbf{ĐỀ KIỂM TRA TỰ LUẬN}\\\\
+    \\textbf{Môn: TOÁN}\\\\
+    \\textit{Thời gian làm bài: 90 phút}
+\\end{minipage}
+
+\\vspace{10pt}
+\\noindent\\textbf{Họ và tên thí sinh:} \\dotfill \\hfill\\textbf{Số báo danh:} \\makebox[4cm]{\\dotfill}
+\\vspace{10pt}
+\\hrule
+\\vspace{10pt}`;
+
+        // --- MẪU CHUYÊN ĐỀ & PHIẾU HỌC TẬP: 3 TEMPLATE MÀU SẮC + ICON ---
+        const topicTemplates = [
+            {
+                label: "Xanh Ngọc – Cổ Điển",
+                primary: "teal",
+                headerBg: "teal!5!white",
+                solBoxBg: "teal!3!white",
+                accentIcon: "\\faGraduationCap",
+                questionIcon: "\\faBookmark",
+                solutionIcon: "\\faLightbulb"
+            },
+            {
+                label: "Cam Rực – Năng Động",
+                primary: "orange",
+                headerBg: "orange!5!white",
+                solBoxBg: "yellow!6!white",
+                accentIcon: "\\faFire",
+                questionIcon: "\\faStar",
+                solutionIcon: "\\faRocket"
+            },
+            {
+                label: "Tím Sáng Tạo – Hiện Đại",
+                primary: "violet",
+                headerBg: "violet!5!white",
+                solBoxBg: "violet!3!white",
+                accentIcon: "\\faCrown",
+                questionIcon: "\\faFeatherAlt",
+                solutionIcon: "\\faMagic"
+            }
+        ];
+
+        function getTopicTemplate(id) {
+            const idx = parseInt(id, 10);
+            return topicTemplates[idx] || topicTemplates[0];
+        }
+
+        // Escape các ký tự đặc biệt LaTeX trong văn bản do người dùng tự gõ (tên chuyên đề, tên GV...)
+        function escapeLatex(str) {
+            if (!str) return '';
+            return String(str)
+                .replace(/\\/g, '\\textbackslash{}')
+                .replace(/([&%$#_{}])/g, '\\$1')
+                .replace(/~/g, '\\textasciitilde{}')
+                .replace(/\^/g, '\\textasciicircum{}');
+        }
+
+        const getTopicPreamble = (solMode, templateId, layout, teacherName, writingStyle) => {
+            const tpl = getTopicTemplate(templateId);
+            const isLandscape = String(layout) === '1';
+            const teacherSafe = escapeLatex(teacherName) || "Vũ Tiến Lực - NHC";
+            const isGridStyle = String(writingStyle) === '1';
+
+            // Phần trống để học sinh làm bài, luôn đẩy xuống cuối trang bằng 1 lần \vspace*{\fill}
+            // (không dùng \vspace*{\fill} lặp trong từng dòng như trước - dễ gây mất dòng kẻ).
+            const writingAreaBlock = isGridStyle ? `
+    \\vspace*{\\fill}
+    \\noindent\\begin{tikzpicture}
+        \\draw[gray!10,line width=0.1pt] (0,0) grid[step=0.5cm] (\\linewidth,5.5cm);
+    \\end{tikzpicture}` : `
+    \\vspace*{\\fill}
+    \\foreach \\n in {1,...,6} {\\noindent\\textcolor{gray!15}{\\rule{\\linewidth}{0.2pt}}\\par\\vspace{0.9cm}}`;
+
+            const geometryLine = isLandscape
+                ? "\\usepackage[paperwidth=33.867cm,paperheight=19.05cm,margin=1.8cm,headsep=6mm,footskip=8mm]{geometry}"
+                : "\\usepackage[left=2cm,right=2cm,top=2cm,bottom=2cm,headsep=6mm,footskip=8mm]{geometry}";
+
+            const fontSizeBlock = isLandscape ? `
+% --- Phóng to cỡ chữ toàn tài liệu cho phù hợp trình chiếu (không cần gói extsizes) ---
+% Văn bản câu hỏi (\\normalsize) = 28pt, bằng đúng cỡ tiêu đề câu (\\Large)
+\\renewcommand{\\footnotesize}{\\fontsize{14}{18}\\selectfont}
+\\renewcommand{\\small}{\\fontsize{16}{20}\\selectfont}
+\\renewcommand{\\normalsize}{\\fontsize{28}{34}\\selectfont}
+\\renewcommand{\\large}{\\fontsize{30}{36}\\selectfont}
+\\renewcommand{\\Large}{\\fontsize{28}{34}\\selectfont}
+\\renewcommand{\\LARGE}{\\fontsize{34}{40}\\selectfont}
+\\renewcommand{\\huge}{\\fontsize{38}{44}\\selectfont}
+\\renewcommand{\\Huge}{\\fontsize{44}{50}\\selectfont}
+\\normalsize
+` : "";
+
+            const exEnv = isLandscape ? `
+\\newcounter{ex}
+\\newenvironment{ex}[1][]{
+    \\clearpage
+    \\refstepcounter{ex}
+    \\bfseries
+    \\noindent{\\Large\\color{${tpl.primary}!80!black}${tpl.questionIcon}}\\;{\\Large\\bfseries\\color{${tpl.primary}!90!black}Bài \\theex.}\\enspace\\ignorespaces
+}{
+    \\par${writingAreaBlock}
+}` : `
+\\newcounter{ex}
+\\newenvironment{ex}[1][]{
+    \\par\\addvspace{8pt}
+    \\refstepcounter{ex}
+    \\noindent{\\color{${tpl.primary}!80!black}${tpl.questionIcon}}\\;\\textbf{\\color{${tpl.primary}!90!black}Bài \\theex.}\\enspace\\ignorespaces
+}{
+    \\par\\addvspace{4pt}
+}`;
+
+            const btEnv = isLandscape ? `
+\\newcounter{bt}
+\\newenvironment{bt}[1][]{
+    \\clearpage
+    \\refstepcounter{bt}
+    \\bfseries
+    \\noindent{\\Large\\color{${tpl.primary}!80!black}${tpl.questionIcon}}\\;{\\Large\\bfseries\\color{${tpl.primary}!90!black}Bài \\thebt.}\\enspace\\ignorespaces
+}{
+    \\par${writingAreaBlock}
+}` : `
+\\newcounter{bt}
+\\newenvironment{bt}[1][]{
+    \\par\\addvspace{8pt}
+    \\refstepcounter{bt}
+    \\noindent{\\color{${tpl.primary}!80!black}${tpl.questionIcon}}\\;\\textbf{\\color{${tpl.primary}!90!black}Bài \\thebt.}\\enspace\\ignorespaces
+}{
+    \\par\\addvspace{4pt}
+}`;
+
+            return `\\documentclass[11pt${isLandscape ? '' : ',a4paper'}]{article}
+\\usepackage[utf8]{vietnam}
+${geometryLine}
+\\usepackage{amsmath,amssymb,amsfonts}
+\\usepackage{xcolor}
+\\usepackage{enumitem}
+\\usepackage{fontawesome5}
+\\usepackage{tcolorbox}
+\\tcbuselibrary{breakable,skins}
+\\usepackage{graphicx}
+\\usepackage{fancyhdr}
+\\usepackage{lastpage}
+\\usepackage{tikz,tkz-euclide,tkz-tab}
+\\usetikzlibrary{angles,intersections,shapes.geometric,arrows,decorations.markings,arrows.meta,patterns.meta,shadows.blur,patterns,quotes,bending,matrix}
+\\usepackage{tikz-3dplot}
+${fontSizeBlock}
+\\def\\solmode{${solMode}}
+${exEnv}
+${btEnv}
+
+\\newbox\\solbox
+\\newcommand{\\loigiai}[2][]{%
+    \\ifcase\\solmode
+    \\or${isLandscape ? "" : `
+        \\setbox\\solbox=\\vbox{\\parindent=0pt\\hsize=\\linewidth #2}%
+        \\pgfmathsetmacro{\\numlines}{int(max(2, \\ht\\solbox/18pt + 1))}%
+        \\par\\vspace{4pt}
+        \\foreach \\n in {1,...,\\numlines} {\\noindent\\makebox[\\linewidth]{\\dotfill}\\par\\vspace{6pt}}
+        \\par\\vspace{2pt}`}
+    \\or
+        \\begin{tcolorbox}[
+            enhanced,breakable,colback=${tpl.solBoxBg},colframe=${tpl.primary}!70!black,
+            title={${tpl.solutionIcon}\\quad Lời giải chi tiết},fonttitle=\\bfseries,
+            boxrule=0.8pt,arc=2mm,left=3mm,right=3mm,top=2mm,bottom=2mm,
+            before skip=6pt,after skip=6pt,
+            coltitle=white,
+            boxed title style={colback=${tpl.primary}!80!black,boxrule=0pt}
+        ]
+            #2
+        \\end{tcolorbox}
+    \\fi
+}
+
+\\newcommand{\\immini}[3][]{
+    \\par\\noindent
+    \\begin{minipage}[c]{0.55\\textwidth}
+        #2
+    \\end{minipage}
+    \\hfill
+    \\begin{minipage}[c]{0.4\\textwidth}
+        \\begin{center}
+            #3
+        \\end{center}
+    \\end{minipage}\\par\\vspace{5pt}
+}
+
+\\newcommand{\\heva}[1]{\\left\\{\\begin{matrix}#1\\end{matrix}\\right.}
+\\newcommand{\\hoac}[1]{\\left[\\begin{matrix}#1\\end{matrix}\\right.}
+
+\\setlength{\\parindent}{0pt}
+\\setlength{\\parskip}{3pt}
+
+\\pagestyle{fancy}
+\\fancyhf{}
+\\fancyhead[L]{\\small\\sffamily\\bfseries ${tpl.accentIcon}\\ PHIẾU HỌC TẬP \\& CHUYÊN ĐỀ TOÁN HỌC}
+\\fancyhead[R]{\\small\\sffamily\\color{${tpl.primary}!60!black} GV: ${teacherSafe}}
+\\fancyfoot[C]{\\small\\sffamily Trang \\thepage/\\pageref{LastPage}}
+\\renewcommand{\\headrulewidth}{0.5pt}
+\\renewcommand{\\footrulewidth}{0.4pt}
+\\setlength{\\headheight}{16pt}`;
+        };
+
+        const getTopicHeader = (templateId, layout, topicTitle, teacherName) => {
+            const tpl = getTopicTemplate(templateId);
+            const isLandscape = String(layout) === '1';
+            const titleSafe = escapeLatex(topicTitle) || "LUYỆN TẬP TOÁN HỌC";
+            const teacherSafe = escapeLatex(teacherName) || "Vũ Tiến Lực - NHC";
+
+            if (isLandscape) {
+                // Trang bìa cỡ lớn, canh giữa, dành cho trình chiếu - trang câu hỏi đầu tiên
+                // sẽ tự \clearpage sang trang mới (đã xử lý trong môi trường ex/bt).
+                return `\\begin{center}
+    \\vspace*{1.5cm}
+    {\\Huge\\color{${tpl.primary}!80!black}${tpl.accentIcon}}\\\\[0.6cm]
+    {\\Huge\\bfseries\\sffamily\\color{${tpl.primary}!85!black}CHUYÊN ĐỀ: ${titleSafe}}\\\\[0.8cm]
+    {\\LARGE\\sffamily GV: ${teacherSafe}}\\\\[0.5cm]
+    {\\Large\\sffamily TRƯỜNG THPT NGUYỄN HỮU CẢNH -- TỔ TOÁN}\\\\[1.5cm]
+    {\\Large\\faUser\\ Họ và tên: \\dotfill}\\\\[1cm]
+    {\\Large\\faUsers\\ Lớp: \\makebox[5cm]{\\dotfill} \\quad \\faClock\\ Buổi: \\makebox[4cm]{\\dotfill}}
+\\end{center}
+\\vfill`;
+            }
+
+            return `\\begin{tcolorbox}[
+    enhanced,colback=${tpl.headerBg},colframe=${tpl.primary}!70!black,boxrule=1.2pt,arc=3mm,
+    left=4mm,right=4mm,top=3mm,bottom=3mm
+]
+    \\begin{minipage}[t]{0.55\\textwidth}
+        \\sffamily
+        {\\bfseries TRƯỜNG THPT NGUYỄN HỮU CẢNH}\\par
+        {\\small TỔ TOÁN - GV: ${teacherSafe}}\\par
+        \\vspace{2pt}
+        {\\large\\bfseries\\color{${tpl.primary}!80!black}${tpl.accentIcon}\\ CHUYÊN ĐỀ: ${titleSafe}}
+    \\end{minipage}
+    \\hfill
+    \\begin{minipage}[t]{0.42\\textwidth}
+        \\sffamily\\small
+        \\textbf{\\faUser\\ Họ và tên:} \\dotfill\\par
+        \\vspace{2pt}
+        \\textbf{\\faUsers\\ Lớp:} \\makebox[2.2cm]{\\dotfill} \\textbf{\\faClock\\ Buổi:} \\makebox[1.3cm]{\\dotfill}\\par
+        \\vspace{2pt}
+        \\textbf{\\faAward\\ Đánh giá:} \\dotfill
+    \\end{minipage}
+\\end{tcolorbox}
+\\vspace{10pt}`;
+        };
+
+        const examFooter = `\\vspace{1cm}
+\\begin{center}
+    \\textbf{--- HẾT ---} \\\\
+    \\textit{Cán bộ coi thi không giải thích gì thêm.}
+\\end{center}`;
+
+        // Trang kết thúc riêng cho bản Chuyên Đề Ngang (trình chiếu) - có \clearpage sang trang riêng
+        const topicLandscapeFooter = `\\clearpage
+\\begin{center}
+    \\vspace*{3cm}
+    {\\Huge\\bfseries --- HẾT ---}\\\\[1cm]
+    {\\Large\\itshape Chúc các em học tốt!}
+\\end{center}
+\\vfill`;
+
+        let parsedChunks = [];
+
+        // File upload handling
+        document.getElementById('fileInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('inputLatex').value = e.target.result;
+                showToast("Đã tải file thành công!");
+                parseContent();
+            };
+            reader.readAsText(file);
+        });
+
+        // Mode switch handling
+        document.getElementById("modeSelect").addEventListener('change', function() {
+            const mode = this.value;
+            const essayOpt = document.getElementById("essayOptionContainer");
+            const examMixOpt = document.getElementById("examMixContainer");
+            const btnMixExam = document.getElementById("btnMixExam");
+            const topicTemplateOpt = document.getElementById("topicTemplateContainer");
+            if (mode === 'essay' || mode === 'topic') {
+                essayOpt.classList.remove("hidden");
+            } else {
+                essayOpt.classList.add("hidden");
+            }
+            if (mode === 'topic') {
+                topicTemplateOpt.classList.remove("hidden");
+                topicTemplateOpt.classList.add("flex");
+            } else {
+                topicTemplateOpt.classList.add("hidden");
+                topicTemplateOpt.classList.remove("flex");
+            }
+            if (mode === 'exam') {
+                examMixOpt.classList.remove("hidden");
+                examMixOpt.classList.add("flex");
+                btnMixExam.classList.remove("hidden");
+            } else {
+                examMixOpt.classList.add("hidden");
+                examMixOpt.classList.remove("flex");
+                btnMixExam.classList.add("hidden");
+            }
+            parsedChunks = [];
+            document.getElementById("previewContainer").innerHTML = `
+                <div class="h-full flex flex-col items-center justify-center text-gray-400 space-y-3">
+                    <i class="fa-regular fa-clipboard text-4xl opacity-50"></i>
+                    <p class="text-sm">Nhấn "Phân Tích" để xem trước</p>
+                </div>
+            `;
+            updateSelectionCount();
+        });
+
+        // Đồng bộ hiển thị các tùy chọn (solmode/template/trộn đề) với mode mặc định lúc tải trang
+        document.getElementById("modeSelect").dispatchEvent(new Event('change'));
+
+        function updateSelectionCount() {
+            const selected = parsedChunks.filter(c => c.selected).length;
+            document.getElementById('selectionCount').innerText = `${selected} / ${parsedChunks.length} mục`;
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toastMsg').innerText = message;
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3000);
+        }
+
+        function parseContent() {
+            const input = document.getElementById("inputLatex").value;
+            const mode = document.getElementById("modeSelect").value;
+            const container = document.getElementById("previewContainer");
+            container.innerHTML = "";
+            parsedChunks = [];
+
+            if (!input.trim()) {
+                container.innerHTML = "<p class='text-sm text-gray-500 italic text-center mt-5'>Vui lòng nhập nội dung trước khi phân tích.</p>";
+                updateSelectionCount();
+                return;
+            }
+
+            let regex;
+            if (mode === 'tikz') {
+                regex = /\\begin\{tikzpicture\}[\s\S]*?\\end\{tikzpicture\}/g;
+            } else {
+                regex = /\\begin\{(ex|bt)\}(?:\[.*?\])?[\s\S]*?\\end\{\1\}/g;
+            }
+
+            let match;
+            let count = 0;
+            while ((match = regex.exec(input)) !== null) {
+                parsedChunks.push({
+                    id: count,
+                    type: mode === 'tikz' ? 'TikZ' : match[1],
+                    content: match[0],
+                    selected: true
+                });
+                count++;
+            }
+
+            if (parsedChunks.length === 0) {
+                container.innerHTML = "<p class='text-sm text-orange-600 italic text-center mt-5'><i class='fa-solid fa-triangle-exclamation mr-1'></i>Không tìm thấy thẻ nào phù hợp với chế độ hiện tại.</p>";
+                updateSelectionCount();
+                return;
+            }
+
+            parsedChunks.forEach(chunk => {
+                let previewText = chunk.content.substring(0, 150).replace(/</g, "&lt;").replace(/>/g, "&gt;") + "...";
+                let title = mode === 'tikz' ? `Hình ${chunk.id + 1}` : (chunk.type === 'ex' ? `Câu Hỏi` : `Bài Tập`);
+
+                let div = document.createElement("div");
+                div.className = "flex items-start gap-3 p-3 bg-white border border-gray-200 rounded-lg hover:border-blue-400 transition-colors cursor-pointer shadow-sm";
+                div.innerHTML = `
+                    <div class="flex-shrink-0 mt-1">
+                        <input type="checkbox" id="chk_${chunk.id}" checked class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 cursor-pointer">
+                    </div>
+                    <label for="chk_${chunk.id}" class="flex-1 cursor-pointer overflow-hidden">
+                        <div class="font-bold text-sm text-gray-800 mb-1"><i class="fa-solid fa-code text-blue-500 mr-1"></i>${title}</div>
+                        <div class="text-xs text-gray-500 font-mono bg-gray-50 p-2 rounded line-clamp-3 overflow-hidden text-ellipsis">${previewText}</div>
+                    </label>
+                `;
+                container.appendChild(div);
+
+                div.querySelector('input').addEventListener('change', function(e) {
+                    chunk.selected = e.target.checked;
+                    updateSelectionCount();
+                });
+            });
+            updateSelectionCount();
+            showToast(`Đã tìm thấy ${count} mục hợp lệ!`);
+        }
+
+        function generateLatex() {
+            const mode = document.getElementById("modeSelect").value;
+            let output = "";
+
+            const selectedChunks = parsedChunks.filter(c => c.selected);
+            if (selectedChunks.length === 0) {
+                showToast("Vui lòng chọn ít nhất 1 mục để tạo file!");
+                return;
+            }
+
+            if (mode === 'tikz') {
+                let bodyContent = selectedChunks.map(c => c.content).join("\n\n% " + "-".repeat(40) + "\n\n");
+                output = tikzPreamble + "\n\\begin{document}\n\n" + tikzHeader + "\n" + bodyContent + "\n\n\\end{document}";
+            } else if (mode === 'exam') {
+                let bodyContent = "";
+                let part1Chunks = [];
+                let part2Chunks = [];
+                let part3Chunks = [];
+
+                selectedChunks.forEach(c => {
+                    if (c.type === 'bt') {
+                        part3Chunks.push(c.content);
+                    } else if (c.content.includes('\\choiceTF')) {
+                        part2Chunks.push(c.content);
+                    } else {
+                        part1Chunks.push(c.content);
+                    }
+                });
+
+                if (part1Chunks.length > 0) {
+                    bodyContent += "\\section{PHẦN I. TRẮC NGHIỆM MỘT PHƯƠNG ÁN ĐÚNG}\n\\textit{Thí sinh trả lời các câu hỏi sau. Mỗi câu hỏi chỉ chọn một phương án.}\n\\setcounter{ex}{0}\n\n" + part1Chunks.join("\n\n") + "\n\n";
+                }
+                if (part2Chunks.length > 0) {
+                    bodyContent += "\\section{PHẦN II. TRẮC NGHIỆM ĐÚNG--SAI}\n\\textit{Trong mỗi ý a), b), c), d), thí sinh chọn đúng hoặc sai.}\n\\setcounter{ex}{0}\n\n" + part2Chunks.join("\n\n") + "\n\n";
+                }
+                if (part3Chunks.length > 0) {
+                    bodyContent += "\\section{PHẦN III. TRẢ LỜI NGẮN}\n\\textit{Thí sinh ghi đáp án vào vị trí được dành sẵn sau mỗi câu hỏi.}\n\\setcounter{bt}{0}\n\n" + part3Chunks.join("\n\n") + "\n\n";
+                }
+
+                const examSolMode = document.getElementById("examSolutionMode").value;
+                output = getExamPreamble(examSolMode) + "\n\\begin{document}\n\n" + examHeader + "\n\n" + bodyContent + examFooter + "\n\\end{document}";
+            } else if (mode === 'essay') {
+                const essaySolMode = document.getElementById("essaySolutionMode").value;
+                let bodyContent = selectedChunks.map(c => c.content).join("\n\n");
+                let finalBody = essayHeader + "\n\n\\setcounter{ex}{0}\n\\setcounter{bt}{0}\n\n" + bodyContent + "\n\n" + examFooter;
+                output = getEssayPreamble(essaySolMode) + "\n\\begin{document}\n\n" + finalBody + "\n\n\\end{document}";
+            } else if (mode === 'topic') {
+                const topicSolMode = document.getElementById("essaySolutionMode").value;
+                const topicTemplateId = document.getElementById("topicTemplate").value;
+                const topicLayout = document.getElementById("topicLayout").value;
+                const topicWritingStyle = document.getElementById("topicWritingStyle").value;
+                const topicTitle = document.getElementById("topicTitleInput").value;
+                const topicTeacher = document.getElementById("topicTeacherInput").value;
+                const topicFooter = (topicLayout === '1') ? topicLandscapeFooter : examFooter;
+                let bodyContent = selectedChunks.map(c => c.content).join("\n\n");
+                let finalBody = getTopicHeader(topicTemplateId, topicLayout, topicTitle, topicTeacher) + "\n\n\\setcounter{ex}{0}\n\\setcounter{bt}{0}\n\n" + bodyContent + "\n\n" + topicFooter;
+                output = getTopicPreamble(topicSolMode, topicTemplateId, topicLayout, topicTeacher, topicWritingStyle) + "\n\\begin{document}\n\n" + finalBody + "\n\n\\end{document}";
+            }
+
+            document.getElementById("outputLatex").value = output;
+            showToast("Tạo mã LaTeX thành công!");
+        }
+
+        // ================== TRỘN ĐỀ 3 PHẦN (THPT QUỐC GIA) ==================
+        // Quy ước nhận diện đáp án đúng trong mã nguồn đầu vào (hỗ trợ cả viết liền
+        // \choice{..}{..}{..}{..} lẫn viết xuống dòng \choice\n{..}\n{..}\n{..}\n{..}):
+        //  - \choice / \choicefour / \choiceone: đặt lệnh \True ở ĐẦU nội dung đáp án ĐÚNG
+        //    (VD: {\True $m=3$} -> đáp án đúng là phương án chứa \True)
+        //  - \choiceTF: mỗi ý nào có \True ở đầu thì ý đó là "Đúng", không có là "Sai"
+        //  - \shortans{giá trị}: giá trị trong {} chính là đáp số ngắn
+
+        function shuffleArray(arr) {
+            const a = arr.slice();
+            for (let i = a.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                const tmp = a[i]; a[i] = a[j]; a[j] = tmp;
+            }
+            return a;
+        }
+
+        // Trích count nhóm {...} liên tiếp bắt đầu từ fromIndex, có cân bằng dấu ngoặc nhọn
+        function extractBraceGroups(text, fromIndex, count) {
+            let i = fromIndex;
+            const args = [];
+            for (let c = 0; c < count; c++) {
+                while (i < text.length && text[i] !== '{') i++;
+                if (i >= text.length) return null;
+                let depth = 0, start = i;
+                do {
+                    if (text[i] === '{') depth++;
+                    else if (text[i] === '}') depth--;
+                    i++;
+                } while (depth > 0 && i <= text.length);
+                if (depth !== 0) return null;
+                args.push(text.slice(start + 1, i - 1));
+            }
+            return { args: args, endIndex: i };
+        }
+
+        function parseChoiceBlock(content) {
+            // \choice có thể viết liền {..}{..}{..}{..} hoặc xuống dòng trước mỗi { (kiểu \choice\n{..}\n{..}...)
+            const re = /\\(choicefour|choiceone|choice)\s*\{/;
+            const m = re.exec(content);
+            if (!m) return null;
+            const cmdName = m[1];
+            const braceStart = m.index + m[0].length - 1;
+            const parsed = extractBraceGroups(content, braceStart, 4);
+            if (!parsed) return null;
+            return {
+                cmdName: cmdName,
+                before: content.slice(0, m.index),
+                args: parsed.args,
+                after: content.slice(parsed.endIndex)
+            };
+        }
+
+        function parseChoiceTFBlock(content) {
+            const re = /\\choiceTF\s*\{/;
+            const m = re.exec(content);
+            if (!m) return null;
+            const braceStart = m.index + m[0].length - 1;
+            const parsed = extractBraceGroups(content, braceStart, 4);
+            if (!parsed) return null;
+            return {
+                before: content.slice(0, m.index),
+                args: parsed.args,
+                after: content.slice(parsed.endIndex)
+            };
+        }
+
+        function parseShortAnsBlock(content) {
+            const re = /\\shortans\s*(\[[^\]]*\])?\s*\{/;
+            const m = re.exec(content);
+            if (!m) return null;
+            const braceStart = m.index + m[0].length - 1;
+            const parsed = extractBraceGroups(content, braceStart, 1);
+            if (!parsed) return null;
+            let answer = parsed.args[0].trim();
+            answer = answer.replace(/\$/g, "").replace(/\\,/g, "").trim();
+            if (/^-?\d+,\d+$/.test(answer)) answer = answer.replace(",", ".");
+            return { answer: answer };
+        }
+
+        function hasTrueMark(str) {
+            return /\\True\b/.test(str);
+        }
+
+        // Xáo 1 câu trắc nghiệm 1 phương án đúng -> {content, correctLetter}
+        function mixSingleChoiceQuestion(content) {
+            const block = parseChoiceBlock(content);
+            if (!block) return { content: content, correctLetter: '?' };
+            const items = block.args.map(a => ({ text: a, isTrue: hasTrueMark(a) }));
+            const shuffled = shuffleArray(items);
+            let correctIdx = shuffled.findIndex(x => x.isTrue);
+            if (correctIdx === -1) correctIdx = 0;
+            const letters = ['A', 'B', 'C', 'D'];
+            const newCmd = "\\" + block.cmdName + "{" + shuffled.map(x => x.text).join("}{") + "}";
+            return {
+                content: block.before + newCmd + block.after,
+                correctLetter: letters[correctIdx]
+            };
+        }
+
+        // Xáo 1 câu đúng-sai -> {content, pattern}
+        function mixTFQuestion(content) {
+            const block = parseChoiceTFBlock(content);
+            if (!block) return { content: content, pattern: '????' };
+            const items = block.args.map(a => ({ text: a, isTrue: hasTrueMark(a) }));
+            const shuffled = shuffleArray(items);
+            const pattern = shuffled.map(x => x.isTrue ? 'Đ' : 'S').join('');
+            const newCmd = "\\choiceTF{" + shuffled.map(x => x.text).join("}{") + "}";
+            return {
+                content: block.before + newCmd + block.after,
+                pattern: pattern
+            };
+        }
+
+        // Trả lời ngắn: không xáo nội dung, chỉ lấy đáp số
+        function extractShortAnswer(content) {
+            const block = parseShortAnsBlock(content);
+            return block ? block.answer : '?';
+        }
+
+        function buildExamHeaderWithCode(code) {
+            const label = "\\begin{flushright}\\fbox{\\textbf{Mã đề: " + code + "}}\\end{flushright}\n";
+            return examHeader.replace(
+                "\\noindent\\textbf{Họ và tên thí sinh:}",
+                label + "\\noindent\\textbf{Họ và tên thí sinh:}"
+            );
+        }
+
+        function mixExamAndExport() {
+            if (typeof XLSX === 'undefined') {
+                showToast("Chưa tải được thư viện xuất Excel. Kiểm tra kết nối mạng!");
+                return;
+            }
+
+            const selectedChunks = parsedChunks.filter(c => c.selected);
+            if (selectedChunks.length === 0) {
+                showToast("Vui lòng chọn ít nhất 1 câu để trộn đề!");
+                return;
+            }
+
+            let part1 = [], part2 = [], part3 = [];
+            selectedChunks.forEach(c => {
+                if (c.type === 'bt') part3.push(c.content);
+                else if (c.content.includes('\\choiceTF')) part2.push(c.content);
+                else part1.push(c.content);
+            });
+
+            if (part1.length + part2.length + part3.length === 0) {
+                showToast("Không có câu hỏi hợp lệ để trộn!");
+                return;
+            }
+
+            const numCodes = parseInt(document.getElementById("examMixCount").value, 10);
+            const examSolMode = document.getElementById("examSolutionMode").value;
+            const codes = [];
+            for (let i = 1; i <= numCodes; i++) codes.push(String(i).padStart(3, '0'));
+
+            const bodies = [];
+            const answerSheets = []; // [{code, answers:[{number, value}]}]
+            let totalQuestions = 0;
+            let unresolvedWarnings = 0;
+
+            codes.forEach(code => {
+                const p1 = shuffleArray(part1);
+                const p2 = shuffleArray(part2);
+                const p3 = shuffleArray(part3);
+
+                let n = 1;
+                const answers = [];
+
+                let part1Body = "";
+                p1.forEach(q => {
+                    const r = mixSingleChoiceQuestion(q);
+                    if (r.correctLetter === '?') unresolvedWarnings++;
+                    part1Body += "\\setcounter{ex}{" + (n - 1) + "}\n" + r.content + "\n\n";
+                    answers.push({ number: n, value: r.correctLetter });
+                    n++;
+                });
+
+                let part2Body = "";
+                p2.forEach(q => {
+                    const r = mixTFQuestion(q);
+                    if (r.pattern === '????') unresolvedWarnings++;
+                    part2Body += "\\setcounter{ex}{" + (n - 1) + "}\n" + r.content + "\n\n";
+                    answers.push({ number: n, value: r.pattern });
+                    n++;
+                });
+
+                let part3Body = "";
+                p3.forEach(q => {
+                    const ans = extractShortAnswer(q);
+                    if (ans === '?') unresolvedWarnings++;
+                    part3Body += "\\setcounter{bt}{" + (n - 1) + "}\n" + q + "\n\n";
+                    answers.push({ number: n, value: ans });
+                    n++;
+                });
+
+                totalQuestions = Math.max(totalQuestions, n - 1);
+                answerSheets.push({ code: code, answers: answers });
+
+                let sectionContent = "";
+                if (part1Body) sectionContent += "\\section{PHẦN I. TRẮC NGHIỆM MỘT PHƯƠNG ÁN ĐÚNG}\n\\textit{Thí sinh trả lời các câu hỏi sau. Mỗi câu hỏi chỉ chọn một phương án.}\n\n" + part1Body;
+                if (part2Body) sectionContent += "\\section{PHẦN II. TRẮC NGHIỆM ĐÚNG--SAI}\n\\textit{Trong mỗi ý a), b), c), d), thí sinh chọn đúng hoặc sai.}\n\n" + part2Body;
+                if (part3Body) sectionContent += "\\section{PHẦN III. TRẢ LỜI NGẮN}\n\\textit{Thí sinh ghi đáp án vào vị trí được dành sẵn sau mỗi câu hỏi.}\n\n" + part3Body;
+
+                // Mỗi mã đề đánh số trang lại từ 1, tổng số trang (X/Y) tính riêng cho mã đề đó
+                // bằng cách đặt \label riêng ở cuối mỗi đề thay vì dùng \pageref{LastPage} chung.
+                const lastPageLabel = "lastpageMD" + code;
+                const pageResetBlock = "\\setcounter{page}{1}\n" +
+                    "\\fancyfoot[R]{\\small\\sffamily Trang \\thepage/\\pageref{" + lastPageLabel + "}}\n\n";
+
+                bodies.push(
+                    pageResetBlock +
+                    buildExamHeaderWithCode(code) + "\n\n" +
+                    sectionContent + examFooter +
+                    "\n\\label{" + lastPageLabel + "}"
+                );
+            });
+
+            const output = getExamPreamble(examSolMode) + "\n\\begin{document}\n\n" + bodies.join("\n\\newpage\n\n") + "\n\n\\end{document}";
+            document.getElementById("outputLatex").value = output;
+
+            // ---- Xuất Excel đáp án ----
+            const aoa = [];
+            aoa.push(["Thông tin điền vào File"].concat(Array(numCodes).fill("")));
+            aoa.push(["Câu"].concat(codes));
+            for (let q = 1; q <= totalQuestions; q++) {
+                const row = [q];
+                answerSheets.forEach(sheet => {
+                    const found = sheet.answers.find(a => a.number === q);
+                    row.push(found ? found.value : "");
+                });
+                aoa.push(row);
+            }
+
+            const ws = XLSX.utils.aoa_to_sheet(aoa);
+            ws['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: numCodes } }];
+            ws['!cols'] = [{ wch: 8 }].concat(Array(numCodes).fill({ wch: 10 }));
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "DapAn");
+            XLSX.writeFile(wb, "DapAn_TronDe.xlsx");
+
+            if (unresolvedWarnings > 0) {
+                showToast("Đã trộn " + numCodes + " mã đề (" + unresolvedWarnings + " câu chưa đánh dấu \\True/\\shortans hợp lệ, cần kiểm tra lại)!");
+            } else {
+                showToast("Đã trộn " + numCodes + " mã đề thành công! Đáp án đã tải về Excel.");
+            }
+        }
+
+        function copyToClipboard() {
+            const textarea = document.getElementById("outputLatex");
+            if (!textarea.value) return;
+            
+            textarea.select();
+            document.execCommand("copy");
+            window.getSelection().removeAllRanges();
+            showToast("Đã copy vào Clipboard!");
+        }
+
+        function downloadTex() {
+            const text = document.getElementById("outputLatex").value;
+            if (!text) return;
+
+            const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
+            const anchor = document.createElement("a");
+            anchor.download = "main.tex";
+            anchor.href = window.URL.createObjectURL(blob);
+            anchor.click();
+            window.URL.revokeObjectURL(anchor.href);
+            showToast("Đã tải file main.tex!");
+        }
+
+        // ================== TẠO PROMPT AI - PHIẾU HỌC TẬP ==================
+        function openPromptModal() {
+            const modal = document.getElementById("promptModal");
+            modal.classList.remove("hidden");
+            modal.classList.add("flex");
+        }
+
+        function closePromptModal() {
+            const modal = document.getElementById("promptModal");
+            modal.classList.add("hidden");
+            modal.classList.remove("flex");
+        }
+
+        function generateWorksheetPrompt() {
+            const topic = document.getElementById("pfTopic").value.trim() || "(Giáo viên tự chọn chủ đề phù hợp chương trình)";
+            const grade = document.getElementById("pfGrade").value;
+            const countMC = parseInt(document.getElementById("pfCountMC").value, 10) || 0;
+            const countTF = parseInt(document.getElementById("pfCountTF").value, 10) || 0;
+            const countSA = parseInt(document.getElementById("pfCountSA").value, 10) || 0;
+            const levelNB = parseInt(document.getElementById("pfLevelNB").value, 10) || 0;
+            const levelTH = parseInt(document.getElementById("pfLevelTH").value, 10) || 0;
+            const levelVD = parseInt(document.getElementById("pfLevelVD").value, 10) || 0;
+            const levelVDC = parseInt(document.getElementById("pfLevelVDC").value, 10) || 0;
+            const notes = document.getElementById("pfNotes").value.trim() || "Không có";
+            const total = countMC + countTF + countSA;
+            const levelTotal = levelNB + levelTH + levelVD + levelVDC;
+
+            if (total === 0) {
+                showToast("Vui lòng nhập ít nhất 1 câu ở một trong các dạng!");
+                return;
+            }
+
+            let levelWarning = "";
+            if (levelTotal !== 100) {
+                levelWarning = " (lưu ý: tổng tỉ lệ hiện là " + levelTotal + "%, hãy tự phân bổ hợp lý cho đủ 100%)";
+            }
+
+            const lines = [];
+            lines.push("Bạn là giáo viên Toán THPT giàu kinh nghiệm, giỏi soạn phiếu học tập giúp học sinh hiểu bản chất và tạo hứng thú học tập.");
+            lines.push("");
+            lines.push("Hãy soạn một PHIẾU HỌC TẬP môn Toán bằng mã LaTeX theo đúng cú pháp dưới đây, để dán trực tiếp vào công cụ \"LaTeX Pro Builder\".");
+            lines.push("");
+            lines.push("THÔNG TIN CHUYÊN ĐỀ");
+            lines.push("- Chủ đề: " + topic);
+            lines.push("- Khối lớp: " + grade);
+            lines.push("- Ghi chú thêm: " + notes);
+            lines.push("");
+            lines.push("SỐ LƯỢNG CÂU HỎI CẦN TẠO (tổng " + total + " câu)");
+            lines.push("- Trắc nghiệm 1 phương án đúng: " + countMC + " câu");
+            lines.push("- Trắc nghiệm đúng - sai (4 ý a,b,c,d): " + countTF + " câu");
+            lines.push("- Trả lời ngắn (đáp số dạng số/ngắn gọn): " + countSA + " câu");
+            lines.push("");
+            lines.push("PHÂN HÓA THEO MỨC ĐỘ NHẬN THỨC (áp dụng cho cả 3 dạng câu hỏi trên, đảm bảo đủ cho MỌI đối tượng học sinh - từ yếu đến giỏi)" + levelWarning);
+            lines.push("- Nhận biết: " + levelNB + "%");
+            lines.push("- Thông hiểu: " + levelTH + "%");
+            lines.push("- Vận dụng: " + levelVD + "%");
+            lines.push("- Vận dụng cao: " + levelVDC + "%");
+            lines.push("");
+            lines.push("YÊU CẦU BẮT BUỘC VỀ ĐỊNH DẠNG - PHẢI TUÂN THỦ CHÍNH XÁC CÚ PHÁP SAU:");
+            lines.push("");
+            lines.push("1) Trắc nghiệm 1 phương án đúng - dùng môi trường \"ex\", đặt lệnh \\True ngay ở ĐẦU nội dung đáp án đúng:");
+            lines.push("\\begin{ex}");
+            lines.push("<Nội dung câu hỏi, công thức toán đặt trong $...$>");
+            lines.push("\\choice");
+            lines.push("{\\True <đáp án đúng>}");
+            lines.push("{<phương án nhiễu B>}");
+            lines.push("{<phương án nhiễu C>}");
+            lines.push("{<phương án nhiễu D>}");
+            lines.push("\\loigiai{");
+            lines.push("<Lời giải chi tiết, trình bày từng bước>");
+            lines.push("}");
+            lines.push("\\end{ex}");
+            lines.push("");
+            lines.push("2) Trắc nghiệm đúng - sai (4 ý a,b,c,d) - dùng môi trường \"ex\", đặt \\True ở đầu MỖI ý đúng (số ý đúng nên đa dạng, không cố định):");
+            lines.push("\\begin{ex}");
+            lines.push("<Nội dung câu hỏi và dẫn dắt cho 4 mệnh đề a,b,c,d>");
+            lines.push("\\choiceTF");
+            lines.push("{<mệnh đề a>}");
+            lines.push("{\\True <mệnh đề b, nếu đúng thì có \\True ở đầu>}");
+            lines.push("{<mệnh đề c>}");
+            lines.push("{\\True <mệnh đề d, nếu đúng>}");
+            lines.push("\\loigiai{");
+            lines.push("<Giải thích đúng/sai cho từng ý a,b,c,d>");
+            lines.push("}");
+            lines.push("\\end{ex}");
+            lines.push("");
+            lines.push("3) Trả lời ngắn - dùng môi trường \"bt\":");
+            lines.push("\\begin{bt}");
+            lines.push("<Nội dung câu hỏi>");
+            lines.push("\\shortans{<đáp số, chỉ ghi số hoặc chuỗi ngắn gọn, không kèm đơn vị>}");
+            lines.push("\\loigiai{");
+            lines.push("<Lời giải chi tiết, trình bày từng bước>");
+            lines.push("}");
+            lines.push("\\end{bt}");
+            lines.push("");
+            lines.push("QUY TẮC CHUNG");
+            lines.push("- Chỉ xuất ra các khối \\begin{ex}...\\end{ex} và \\begin{bt}...\\end{bt} nối tiếp nhau, KHÔNG thêm \\documentclass, \\begin{document} hay bất kỳ phần nào khác.");
+            lines.push("- Công thức toán luôn đặt trong dấu $...$, dùng cú pháp LaTeX chuẩn (amsmath).");
+            lines.push("- Đáp số trong \\shortans phải là số/chuỗi ngắn, không chứa đơn vị hoặc ký hiệu rườm rà.");
+            lines.push("- Sắp xếp câu hỏi từ dễ đến khó, phân bổ đúng theo tỉ lệ mức độ đã nêu ở trên.");
+            lines.push("- Tạo đủ số lượng câu hỏi đã yêu cầu cho từng dạng, không thiếu không thừa.");
+
+            const prompt = lines.join("\n");
+            document.getElementById("pfOutput").value = prompt;
+            showToast("Đã tạo prompt! Hãy copy và dán vào AI.");
+        }
+
+        function copyPromptOutput() {
+            const textarea = document.getElementById("pfOutput");
+            if (!textarea.value) {
+                showToast("Chưa có prompt nào để copy, hãy bấm 'Tạo Prompt' trước!");
+                return;
+            }
+            textarea.select();
+            document.execCommand("copy");
+            window.getSelection().removeAllRanges();
+            showToast("Đã copy prompt vào Clipboard!");
+        }
+    </script>
+</body>
+</html>
