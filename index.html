@@ -21,18 +21,41 @@
 <body class="h-screen flex flex-col overflow-hidden">
     <!-- Header -->
     <header class="bg-white shadow-sm border-b border-gray-200 z-10 flex-shrink-0">
-        <div class="max-w-full mx-auto px-4 sm:px-6 lg:px-8 py-3 flex justify-between items-center">
-            <div class="flex items-center gap-2">
-                <div class="bg-blue-600 p-2 rounded-lg text-white">
-                    <i class="fa-solid fa-layer-group text-lg"></i>
+        <div class="max-w-full mx-auto px-4 sm:px-6 lg:px-8 py-3 space-y-2.5">
+            <!-- Hàng 1: Logo/tên app -- Chế độ + liên kết AI -->
+            <div class="flex justify-between items-center flex-wrap gap-2">
+                <div class="flex items-center gap-2">
+                    <div class="bg-blue-600 p-2 rounded-lg text-white">
+                        <i class="fa-solid fa-layer-group text-lg"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-xl font-bold text-gray-900 leading-tight">LaTeX Pro Builder</h1>
+                        <p class="text-xs text-gray-500 font-medium">Hỗ trợ TikZ & Đề Thi 3 Phần & Tự Luận & Chuyên Đề</p>
+                    </div>
                 </div>
-                <div>
-                    <h1 class="text-xl font-bold text-gray-900 leading-tight">LaTeX Pro Builder</h1>
-                    <p class="text-xs text-gray-500 font-medium">Hỗ trợ TikZ & Đề Thi 3 Phần & Tự Luận & Chuyên Đề</p>
+
+                <div class="flex items-center gap-2 flex-wrap justify-end">
+                    <select id="modeSelect" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2 outline-none font-semibold shadow-sm cursor-pointer">
+                        <option value="tikz">📐 Gom Hình Vẽ (TikZ)</option>
+                        <option value="exam">📝 Đề Thi 3 Phần (Trắc nghiệm + Đúng Sai)</option>
+                        <option value="essay">✍️ Đề Thi Tự Luận (Chuẩn Quốc Gia)</option>
+                        <option value="topic" selected>📚 Chuyên Đề & Phiếu Học Tập (Mẫu Ấn Tượng)</option>
+                    </select>
+
+                    <a href="https://prism.openai.com/" target="_blank" rel="noopener noreferrer" class="bg-white border border-gray-300 text-gray-700 px-3 py-2 rounded-lg text-sm font-semibold hover:bg-gray-50 transition shadow-sm flex items-center gap-1.5 whitespace-nowrap">
+                        <i class="fa-solid fa-arrow-up-right-from-square text-indigo-500"></i> Prism AI
+                    </a>
+                    <button onclick="openPromptModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 rounded-lg text-sm font-semibold shadow flex items-center gap-1.5 whitespace-nowrap">
+                        <i class="fa-solid fa-robot"></i> Tạo Prompt AI
+                    </button>
+                    <button onclick="openKnowledgeModal()" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg text-sm font-semibold shadow flex items-center gap-1.5 whitespace-nowrap" title="Thêm phần Kiến Thức Trọng Tâm vào đầu Phiếu Học Tập / Chuyên Đề (chế độ Chuyên Đề & Phiếu Học Tập)">
+                        <i class="fa-solid fa-lightbulb"></i> Kiến Thức Trọng Tâm
+                    </button>
                 </div>
             </div>
-            
-            <div class="flex items-center gap-3 w-full md:w-auto flex-wrap md:flex-nowrap justify-end">
+
+            <!-- Hàng 2: Tùy chọn riêng theo chế độ đang chọn (tự ẩn/hiện) -->
+            <div class="flex items-center gap-2 flex-wrap">
                 <!-- Tùy chọn 3 Chế độ (Áp dụng cho Tự luận & Chuyên đề) -->
                 <div id="essayOptionContainer" class="hidden flex items-center gap-2 bg-indigo-50 border border-indigo-200 px-3 py-1.5 rounded-lg">
                     <span class="text-xs font-bold text-indigo-950 whitespace-nowrap"><i class="fa-solid fa-gears text-amber-500 mr-1"></i>Tùy chọn:</span>
@@ -43,26 +66,50 @@
                     </select>
                 </div>
 
-                <!-- Chọn Template Màu Sắc (chỉ áp dụng cho Chuyên Đề & Phiếu Học Tập) -->
-                <div id="topicTemplateContainer" class="hidden items-center gap-2 bg-fuchsia-50 border border-fuchsia-200 px-3 py-1.5 rounded-lg">
-                    <span class="text-xs font-bold text-fuchsia-950 whitespace-nowrap"><i class="fa-solid fa-palette text-fuchsia-500 mr-1"></i>Mẫu:</span>
-                    <select id="topicTemplate" class="bg-white border border-fuchsia-300 text-fuchsia-950 text-xs rounded focus:ring-fuchsia-500 focus:border-fuchsia-500 block p-1 outline-none font-semibold cursor-pointer">
-                        <option value="0" selected>🔵 Xanh Ngọc - Cổ Điển</option>
-                        <option value="1">🟠 Cam Rực - Năng Động</option>
-                        <option value="2">🟣 Tím Sáng Tạo - Hiện Đại</option>
-                    </select>
-                    <span class="text-xs font-bold text-fuchsia-950 whitespace-nowrap ml-1"><i class="fa-solid fa-table-cells-large text-fuchsia-500 mr-1"></i>Bố cục:</span>
-                    <select id="topicLayout" class="bg-white border border-fuchsia-300 text-fuchsia-950 text-xs rounded focus:ring-fuchsia-500 focus:border-fuchsia-500 block p-1 outline-none font-semibold cursor-pointer" title="Ngang 16:9: mỗi câu tối đa 1 trang, chữ đậm cỡ lớn, có phần trống làm bài - dùng khi trình chiếu máy chiếu">
-                        <option value="0" selected>📄 Dọc A4 (Phiếu học tập)</option>
-                        <option value="1">🖥️ Ngang 16:9 (Trình chiếu)</option>
-                    </select>
-                    <span class="text-xs font-bold text-fuchsia-950 whitespace-nowrap ml-1"><i class="fa-solid fa-pen text-fuchsia-500 mr-1"></i>Phần trống:</span>
-                    <select id="topicWritingStyle" class="bg-white border border-fuchsia-300 text-fuchsia-950 text-xs rounded focus:ring-fuchsia-500 focus:border-fuchsia-500 block p-1 outline-none font-semibold cursor-pointer" title="Kiểu phần trống cho học sinh làm bài (chỉ áp dụng khi chọn bố cục Ngang 16:9)">
-                        <option value="0" selected>➖ Dòng kẻ ngang</option>
-                        <option value="1">▦ Ô li mờ</option>
-                    </select>
-                    <input type="text" id="topicTitleInput" placeholder="Tên chuyên đề..." class="bg-white border border-fuchsia-300 text-fuchsia-950 text-xs rounded focus:ring-fuchsia-500 focus:border-fuchsia-500 outline-none p-1 w-32 ml-1" title="Tên chuyên đề hiển thị ở trang/slide đầu tiên">
-                    <input type="text" id="topicTeacherInput" placeholder="Tên giáo viên..." class="bg-white border border-fuchsia-300 text-fuchsia-950 text-xs rounded focus:ring-fuchsia-500 focus:border-fuchsia-500 outline-none p-1 w-28" title="Tên giáo viên hiển thị ở trang/slide đầu tiên và đầu trang">
+                <!-- Chọn Template Màu Sắc (chỉ áp dụng cho Chuyên Đề & Phiếu Học Tập) - 2 hàng con gọn hơn -->
+                <div id="topicTemplateContainer" class="hidden flex-col gap-1.5 bg-fuchsia-50 border border-fuchsia-200 px-3 py-2 rounded-lg">
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <span class="text-xs font-bold text-fuchsia-950 whitespace-nowrap"><i class="fa-solid fa-palette text-fuchsia-500 mr-1"></i>Mẫu:</span>
+                        <select id="topicTemplate" class="bg-white border border-fuchsia-300 text-fuchsia-950 text-xs rounded focus:ring-fuchsia-500 focus:border-fuchsia-500 block p-1 outline-none font-semibold cursor-pointer">
+                            <option value="0" selected>🔵 Xanh Ngọc - Cổ Điển</option>
+                            <option value="1">🟠 Cam Rực - Năng Động</option>
+                            <option value="2">🟣 Tím Sáng Tạo - Hiện Đại</option>
+                            <option value="3">⚫ Nền Đen - Chữ Trắng</option>
+                        </select>
+                        <span class="text-xs font-bold text-fuchsia-950 whitespace-nowrap ml-1"><i class="fa-solid fa-table-cells-large text-fuchsia-500 mr-1"></i>Bố cục:</span>
+                        <select id="topicLayout" class="bg-white border border-fuchsia-300 text-fuchsia-950 text-xs rounded focus:ring-fuchsia-500 focus:border-fuchsia-500 block p-1 outline-none font-semibold cursor-pointer" title="Ngang 16:9: mỗi câu tối đa 1 trang, chữ đậm cỡ lớn, có phần trống làm bài - dùng khi trình chiếu máy chiếu">
+                            <option value="0" selected>📄 Dọc A4 (Phiếu học tập)</option>
+                            <option value="1">🖥️ Ngang 16:9 (Trình chiếu)</option>
+                        </select>
+                        <span class="text-xs font-bold text-fuchsia-950 whitespace-nowrap ml-1"><i class="fa-solid fa-pen text-fuchsia-500 mr-1"></i>Phần trống:</span>
+                        <select id="topicWritingStyle" class="bg-white border border-fuchsia-300 text-fuchsia-950 text-xs rounded focus:ring-fuchsia-500 focus:border-fuchsia-500 block p-1 outline-none font-semibold cursor-pointer" title="Kiểu phần trống cho học sinh làm bài (chỉ áp dụng khi chọn bố cục Ngang 16:9)">
+                            <option value="0" selected>➖ Dòng kẻ ngang</option>
+                            <option value="1">▦ Ô li mờ</option>
+                        </select>
+                    </div>
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <input type="text" id="topicTitleInput" placeholder="Tên chủ đề..." class="bg-white border border-fuchsia-300 text-fuchsia-950 text-xs rounded focus:ring-fuchsia-500 focus:border-fuchsia-500 outline-none p-1 w-28" title="Tên CHỦ ĐỀ (mục lớn) hiển thị ở trang/slide đầu tiên">
+                        <input type="text" id="topicLessonInput" placeholder="Tên bài..." class="bg-white border border-fuchsia-300 text-fuchsia-950 text-xs rounded focus:ring-fuchsia-500 focus:border-fuchsia-500 outline-none p-1 w-28" title="Tên BÀI (mục nhỏ, riêng với Chủ đề) hiển thị nổi bật dạng khung màu ngay dưới Chủ đề. Để trống nếu không cần">
+                        <input type="text" id="topicTeacherInput" placeholder="Tên giáo viên..." class="bg-white border border-fuchsia-300 text-fuchsia-950 text-xs rounded focus:ring-fuchsia-500 focus:border-fuchsia-500 outline-none p-1 w-28" title="Tên giáo viên hiển thị ở trang/slide đầu tiên và đầu trang">
+                        <label class="flex items-center gap-1 text-xs font-bold text-fuchsia-950 whitespace-nowrap ml-1 cursor-pointer" title="Nhận diện mức độ (Nhận biết/Thông hiểu/Vận dụng/Vận dụng cao) từ mã ID dạng [xDyVz-n] có trong đề (z=1..4 là mức độ). Nếu bật, các câu có ID sẽ được sắp xếp từ mức độ nhỏ đến lớn và in kèm nhãn mức độ.">
+                            <input type="checkbox" id="topicClassifyLevel" class="w-3.5 h-3.5 text-fuchsia-600 bg-white border-fuchsia-300 rounded focus:ring-fuchsia-500 cursor-pointer">
+                            <i class="fa-solid fa-layer-group text-fuchsia-500"></i> Phân mức theo ID
+                        </label>
+                        <label class="flex items-center gap-1 text-xs font-bold text-fuchsia-950 whitespace-nowrap ml-1 cursor-pointer" title="Chỉ áp dụng khi chọn bố cục Ngang 16:9. Tách câu hỏi và lời giải ra các trang riêng: nhãn 'Bài N.' ở trang câu hỏi là 1 liên kết bấm vào để nhảy tới trang lời giải, và ngược lại nhãn lời giải bấm vào sẽ quay về đúng câu hỏi. Chỉ vùng nhãn mới bấm được, không phải cả trang.">
+                            <input type="checkbox" id="topicSmartPresent" class="w-3.5 h-3.5 text-fuchsia-600 bg-white border-fuchsia-300 rounded focus:ring-fuchsia-500 cursor-pointer">
+                            <i class="fa-solid fa-diagram-project text-fuchsia-500"></i> Trình chiếu thông minh
+                        </label>
+                        <label class="flex items-center gap-1 text-xs font-bold text-fuchsia-950 whitespace-nowrap ml-1 cursor-pointer" title="Nếu bật: đầu trang/slide chỉ in Tên Chủ đề, Bài - bỏ tên trường, tên GV và các ô Họ tên/Lớp/Buổi. Nếu tắt: giữ nguyên mẫu đầy đủ mặc định.">
+                            <input type="checkbox" id="topicMinimalHeader" class="w-3.5 h-3.5 text-fuchsia-600 bg-white border-fuchsia-300 rounded focus:ring-fuchsia-500 cursor-pointer">
+                            <i class="fa-solid fa-heading text-fuchsia-500"></i> Chỉ ghi Tên Chủ đề/Bài
+                        </label>
+                        <span class="text-xs font-bold text-fuchsia-950 whitespace-nowrap ml-1"><i class="fa-solid fa-hashtag text-fuchsia-500 mr-1"></i>Trang bắt đầu:</span>
+                        <input type="number" id="topicStartPage" min="1" placeholder="Mặc định 1" class="bg-white border border-fuchsia-300 text-fuchsia-950 text-xs rounded focus:ring-fuchsia-500 focus:border-fuchsia-500 outline-none p-1 w-20" title="Số trang đầu tiên của tài liệu sẽ được đánh số bắt đầu từ đây. Để trống để đánh số như mặc định (bắt đầu từ trang 1).">
+                        <label class="flex items-center gap-1 text-xs font-bold text-fuchsia-950 whitespace-nowrap ml-1 cursor-pointer" title="Chỉ áp dụng bố cục Dọc A4 (Phiếu học tập). Thu hẹp lề còn khoảng 0.8-1cm (thay vì 2cm mặc định) để in được nhiều nội dung hơn trên mỗi trang, giảm số trang in - vẫn nằm trong lề in được của hầu hết máy in gia đình/văn phòng (không phải in tràn lề/borderless).">
+                            <input type="checkbox" id="topicCompactPrint" class="w-3.5 h-3.5 text-fuchsia-600 bg-white border-fuchsia-300 rounded focus:ring-fuchsia-500 cursor-pointer">
+                            <i class="fa-solid fa-leaf text-fuchsia-500"></i> In tiết kiệm giấy
+                        </label>
+                    </div>
                 </div>
 
                 <!-- Tùy chọn Trộn Đề (chỉ áp dụng cho Đề Thi 3 Phần) -->
@@ -81,20 +128,6 @@
                         <option value="8">8 mã đề</option>
                     </select>
                 </div>
-
-                <select id="modeSelect" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2 outline-none font-semibold shadow-sm cursor-pointer">
-                    <option value="tikz">📐 Gom Hình Vẽ (TikZ)</option>
-                    <option value="exam">📝 Đề Thi 3 Phần (Trắc nghiệm + Đúng Sai)</option>
-                    <option value="essay">✍️ Đề Thi Tự Luận (Chuẩn Quốc Gia)</option>
-                    <option value="topic" selected>📚 Chuyên Đề & Phiếu Học Tập (Mẫu Ấn Tượng)</option>
-                </select>
-
-                <a href="https://prism.openai.com/" target="_blank" rel="noopener noreferrer" class="bg-white border border-gray-300 text-gray-700 px-3 py-2 rounded-lg text-sm font-semibold hover:bg-gray-50 transition shadow-sm flex items-center gap-1.5 whitespace-nowrap">
-                    <i class="fa-solid fa-arrow-up-right-from-square text-indigo-500"></i> Prism AI
-                </a>
-                <button onclick="openPromptModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 rounded-lg text-sm font-semibold shadow flex items-center gap-1.5 whitespace-nowrap">
-                    <i class="fa-solid fa-robot"></i> Tạo Prompt AI
-                </button>
             </div>
         </div>
     </header>
@@ -108,10 +141,16 @@
                 <h2 class="text-sm font-bold text-gray-700 uppercase tracking-wide">
                     <span class="bg-gray-200 text-gray-600 px-2 py-0.5 rounded-full mr-1 text-xs">1</span> Nhập Mã Nguồn
                 </h2>
-                <label class="cursor-pointer bg-white border border-gray-300 text-gray-700 px-3 py-1.5 rounded text-xs font-semibold hover:bg-gray-50 transition shadow-sm">
-                    <i class="fa-solid fa-file-upload mr-1 text-blue-500"></i> Tải file .tex
-                    <input type="file" id="fileInput" accept=".tex,.txt" class="hidden">
-                </label>
+                <div class="flex gap-1.5">
+                    <label class="cursor-pointer bg-white border border-gray-300 text-gray-700 px-2.5 py-1.5 rounded text-xs font-semibold hover:bg-gray-50 transition shadow-sm" title="Chọn 1 hoặc nhiều file .tex/.txt (giữ Ctrl/Shift để chọn nhiều)">
+                        <i class="fa-solid fa-file-upload mr-1 text-blue-500"></i> Tải file
+                        <input type="file" id="fileInput" accept=".tex,.txt" multiple class="hidden">
+                    </label>
+                    <label class="cursor-pointer bg-white border border-gray-300 text-gray-700 px-2.5 py-1.5 rounded text-xs font-semibold hover:bg-gray-50 transition shadow-sm" title="Chọn cả thư mục chứa nhiều file .tex - tự động gộp toàn bộ file .tex/.txt trong thư mục (kể cả thư mục con)">
+                        <i class="fa-solid fa-folder-open mr-1 text-amber-500"></i> Tải thư mục
+                        <input type="file" id="folderInput" webkitdirectory directory multiple class="hidden">
+                    </label>
+                </div>
             </div>
             <div class="flex-1 p-3">
                 <textarea id="inputLatex" class="w-full h-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none resize-none font-mono text-sm custom-scrollbar" placeholder="Dán mã LaTeX của bạn vào đây...&#10;&#10;Hỗ trợ:&#10;- \begin{tikzpicture}...&#10;- \begin{ex}...&#10;- \begin{bt}..."></textarea>
@@ -131,15 +170,25 @@
                 </h2>
                 <div class="text-xs font-medium text-gray-500" id="selectionCount">0 mục</div>
             </div>
+            <div class="px-3 py-2 bg-white border-b border-gray-200">
+                <div class="relative">
+                    <i class="fa-solid fa-magnifying-glass absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
+                    <input type="text" id="chunkFilterInput" placeholder="Lọc theo ID/từ khóa, nhiều từ cách nhau bởi dấu phẩy - phải khớp đủ TẤT CẢ (VD: tam giác, vuông)" title="Gõ nhiều từ khóa cách nhau bằng dấu phẩy - mục chỉ hiện khi chứa đủ tất cả các từ khóa" class="w-full pl-7 pr-7 py-1.5 border border-gray-300 rounded-lg text-xs outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    <button id="chunkFilterClear" onclick="clearChunkFilter()" class="hidden absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-xs" title="Xóa bộ lọc"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+            </div>
             <div id="previewContainer" class="flex-1 overflow-y-auto p-3 space-y-3 custom-scrollbar">
                 <div class="h-full flex flex-col items-center justify-center text-gray-400 space-y-3">
                     <i class="fa-regular fa-clipboard text-4xl opacity-50"></i>
                     <p class="text-sm">Nhấn "Phân Tích" để xem trước</p>
                 </div>
             </div>
-            <div class="p-3 bg-white border-t border-gray-200">
+            <div class="p-3 bg-white border-t border-gray-200 space-y-2">
                 <button onclick="generateLatex()" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2.5 px-4 rounded-lg transition-colors shadow flex items-center justify-center gap-2">
                     <i class="fa-solid fa-wand-magic-sparkles"></i> Tạo File Main.tex
+                </button>
+                <button onclick="downloadSelectedChunksTex()" class="w-full bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 font-semibold py-2 px-4 rounded-lg transition-colors shadow-sm flex items-center justify-center gap-2 text-sm" title="Tải riêng nội dung các câu đang được chọn (và khớp bộ lọc nếu có) dưới dạng file .tex thô, chưa qua preamble">
+                    <i class="fa-solid fa-download text-blue-600"></i> Tải câu đã chọn (.tex)
                 </button>
             </div>
         </div>
@@ -264,6 +313,27 @@
         </div>
     </div>
 
+    <!-- Modal: Kiến Thức Trọng Tâm cho Phiếu Học Tập / Chuyên Đề -->
+    <div id="knowledgeModal" class="hidden fixed inset-0 bg-black/50 z-50 items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto custom-scrollbar">
+            <div class="p-4 border-b border-gray-200 flex justify-between items-center sticky top-0 bg-white z-10">
+                <h2 class="text-lg font-bold text-gray-800"><i class="fa-solid fa-lightbulb text-blue-600 mr-2"></i>Kiến Thức Trọng Tâm</h2>
+                <button onclick="closeKnowledgeModal()" class="text-gray-400 hover:text-gray-700 text-xl leading-none">&times;</button>
+            </div>
+            <div class="p-5 space-y-3">
+                <p class="text-xs text-gray-500 -mt-1">Dán/gõ phần lý thuyết cốt lõi (định nghĩa, công thức, phương pháp giải...) ở đây. Khi bấm "Tạo File Main.tex" ở chế độ <strong>Chuyên Đề & Phiếu Học Tập</strong>, nội dung này sẽ tự động được chèn vào đầu tài liệu (sau Tên bài, trước câu hỏi đầu tiên) trong 1 khung nổi bật - không cần dán riêng vào ô "Nhập Mã Nguồn". Để trống nếu không cần phần này.</p>
+                <div>
+                    <label class="text-xs font-bold text-gray-600 block mb-1">Nội dung (hỗ trợ cú pháp LaTeX, công thức đặt trong $...$)</label>
+                    <textarea id="knowledgeInput" rows="10" placeholder="VD: Định nghĩa hàm số bậc hai... Công thức tính đỉnh: $x_0 = \dfrac{-b}{2a}$..." class="w-full border border-gray-300 rounded-lg p-2 text-sm font-mono outline-none focus:ring-2 focus:ring-blue-400 resize-none custom-scrollbar"></textarea>
+                </div>
+                <div class="flex justify-between items-center">
+                    <button onclick="clearKnowledgeInput()" class="bg-white border border-gray-300 text-gray-600 px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-gray-50"><i class="fa-solid fa-trash text-red-500"></i> Xóa nội dung</button>
+                    <button onclick="closeKnowledgeModal()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-1.5 rounded-lg text-sm font-semibold shadow">Xong</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         // --- DATA PREAMBLE ---
         const tikzPreamble = `\\documentclass[12pt,a4paper]{article}
@@ -333,7 +403,7 @@
 %   2 = IN ĐỀ + ĐÁP ÁN + LỜI GIẢI  (hiện đầy đủ đáp án và lời giải chi tiết)
 % ============================================================
 \\def\\dapanmode{${dapanMode}}
-\\ifcase\\dapanmode
+\\ifcase\\dapanmode\\relax
     \\andapan\\anloigiai
 \\or
     \\hienthidapan\\anloigiai
@@ -351,17 +421,17 @@
 }
 
 \\newcommand{\\choice}[4]{
-    \\par\\smallskip\\noindent
-    \\begin{tabular}{@{}p{0.48\\linewidth}@{}p{0.48\\linewidth}@{}}
-        \\textbf{A.}~#1 & \\textbf{B.}~#2\\\\[-1pt]
+    \\par\\medskip\\noindent
+    \\begin{tabular}{@{}p{0.47\\linewidth}@{\\hspace{4mm}}p{0.47\\linewidth}@{}}
+        \\textbf{A.}~#1 & \\textbf{B.}~#2\\\\[7pt]
         \\textbf{C.}~#3 & \\textbf{D.}~#4
-    \\end{tabular}\\par
+    \\end{tabular}\\par\\smallskip
 }
 \\newcommand{\\choicefour}[4]{
-    \\par\\smallskip\\noindent
-    \\begin{tabular}{@{}p{0.24\\linewidth}@{}p{0.24\\linewidth}@{}p{0.24\\linewidth}@{}p{0.24\\linewidth}@{}}
+    \\par\\medskip\\noindent
+    \\begin{tabular}{@{}p{0.22\\linewidth}@{\\hspace{3mm}}p{0.22\\linewidth}@{\\hspace{3mm}}p{0.22\\linewidth}@{\\hspace{3mm}}p{0.22\\linewidth}@{}}
         \\textbf{A.}~#1 & \\textbf{B.}~#2 & \\textbf{C.}~#3 & \\textbf{D.}~#4
-    \\end{tabular}\\par
+    \\end{tabular}\\par\\smallskip
 }
 \\newcommand{\\choiceone}[4]{
     \\begin{enumerate}[label=\\textbf{\\Alph*.},leftmargin=9mm,labelsep=2mm,itemsep=0pt,topsep=2pt]
@@ -522,7 +592,7 @@
 
 \\newbox\\solbox
 \\newcommand{\\loigiai}[2][]{%
-    \\ifcase\\solmode
+    \\ifcase\\solmode\\relax
     \\or
         \\setbox\\solbox=\\vbox{\\parindent=0pt\\hsize=\\linewidth #2}%
         \\pgfmathsetmacro{\\numlines}{int(max(2, \\ht\\solbox/18pt + 1))}%
@@ -542,6 +612,54 @@
         \\end{tcolorbox}
     \\fi
 }
+
+% --- Hỗ trợ tự động khi đề có đủ 3 loại câu: trắc nghiệm, đúng-sai, trả lời ngắn ---
+\\newcommand{\\choice}[4]{
+    \\par\\medskip\\noindent
+    \\begin{tabular}{@{}p{0.47\\linewidth}@{\\hspace{4mm}}p{0.47\\linewidth}@{}}
+        \\textbf{A.}~#1 & \\textbf{B.}~#2\\\\[7pt]
+        \\textbf{C.}~#3 & \\textbf{D.}~#4
+    \\end{tabular}\\par\\smallskip
+}
+\\newcommand{\\choicefour}[4]{
+    \\par\\medskip\\noindent
+    \\begin{tabular}{@{}p{0.22\\linewidth}@{\\hspace{3mm}}p{0.22\\linewidth}@{\\hspace{3mm}}p{0.22\\linewidth}@{\\hspace{3mm}}p{0.22\\linewidth}@{}}
+        \\textbf{A.}~#1 & \\textbf{B.}~#2 & \\textbf{C.}~#3 & \\textbf{D.}~#4
+    \\end{tabular}\\par\\smallskip
+}
+\\newcommand{\\choiceone}[4]{
+    \\begin{enumerate}[label=\\textbf{\\Alph*.},leftmargin=9mm,labelsep=2mm,itemsep=0pt,topsep=2pt]
+        \\item #1 \\item #2 \\item #3 \\item #4
+    \\end{enumerate}
+}
+\\newcommand{\\choiceTF}[4]{
+    \\begin{enumerate}[label=\\textbf{\\alph*)},leftmargin=8mm,labelsep=2mm,itemsep=0pt,topsep=2pt]
+        \\item #1
+        \\item #2
+        \\item #3
+        \\item #4
+    \\end{enumerate}
+}
+\\newenvironment{itemchoice}{
+    \\begin{enumerate}[label=\\textbf{\\alph*)},leftmargin=1cm,itemsep=2pt]
+}{
+    \\end{enumerate}
+}
+\\newcommand{\\itemch}{\\item}
+\\newcommand{\\True}{\\ifcase\\solmode\\relax \\or \\or \\textcolor{green!50!black}{\\faCheckCircle}\\;\\fi}
+\\newcommand{\\shortans}[2][]{%
+    \\par\\nobreak\\smallskip\\noindent\\textbf{Đáp số: }%
+    \\ifcase\\solmode\\relax
+        \\makebox[4cm]{\\dotfill}%
+    \\or
+        \\makebox[4cm]{\\dotfill}%
+    \\or
+        \\tcbox[colback=green!8,colframe=green!50!black,boxrule=.5pt,arc=1mm,left=2mm,right=2mm,top=.5mm,bottom=.5mm]{\\textcolor{green!40!black}{\\textbf{#2}}}%
+    \\fi
+}
+\\usepackage{titlesec}
+\\titleformat{\\section}{\\large\\bfseries\\sffamily}{}{0pt}{}[\\vspace{2pt}\\titlerule]
+\\titlespacing*{\\section}{0pt}{10pt}{6pt}
 
 \\newcommand{\\immini}[3][]{
     \\par\\noindent
@@ -597,6 +715,7 @@
             {
                 label: "Xanh Ngọc – Cổ Điển",
                 primary: "teal",
+                mixWith: "black",
                 headerBg: "teal!5!white",
                 solBoxBg: "teal!3!white",
                 accentIcon: "\\faGraduationCap",
@@ -606,6 +725,7 @@
             {
                 label: "Cam Rực – Năng Động",
                 primary: "orange",
+                mixWith: "black",
                 headerBg: "orange!5!white",
                 solBoxBg: "yellow!6!white",
                 accentIcon: "\\faFire",
@@ -615,11 +735,26 @@
             {
                 label: "Tím Sáng Tạo – Hiện Đại",
                 primary: "violet",
+                mixWith: "black",
                 headerBg: "violet!5!white",
                 solBoxBg: "violet!3!white",
                 accentIcon: "\\faCrown",
                 questionIcon: "\\faFeatherAlt",
                 solutionIcon: "\\faMagic"
+            },
+            {
+                label: "Nền Đen – Chữ Trắng (Trình chiếu)",
+                primary: "yellow",
+                mixWith: "white",
+                dark: true,
+                pageBg: "black",
+                textColor: "white",
+                mathColor: "yellow",
+                headerBg: "black!80!white",
+                solBoxBg: "black!85!white",
+                accentIcon: "\\faMoon",
+                questionIcon: "\\faStar",
+                solutionIcon: "\\faLightbulb"
             }
         ];
 
@@ -638,10 +773,147 @@
                 .replace(/\^/g, '\\textasciicircum{}');
         }
 
-        const getTopicPreamble = (solMode, templateId, layout, teacherName, writingStyle) => {
+        // ============ TỰ ĐỘNG NHẬN DIỆN & CHIA PHẦN (Phiếu học tập / Tự luận / Trình chiếu) ============
+        // Nhận diện đủ 4 loại câu: Trắc nghiệm 1 đáp án, Đúng-Sai, Trả lời ngắn, Tự luận (câu không thuộc
+        // 3 loại còn lại - dùng \loigiai tự do, không \choice/\choiceTF/\shortans). Nếu đề được chọn có đủ
+        // từ 2 trong 4 loại câu này, tự động chia thành các \section riêng biệt (PHẦN I-IV) để phiếu học tập
+        // nhận dạng rõ ràng từng dạng, thay vì nối liền một mạch.
+        function classifyQuestionType(content) {
+            if (content.includes('\\choiceTF')) return 'tf';
+            if (/\\choice(four|one)?\s*\{/.test(content)) return 'mc';
+            if (content.includes('\\shortans')) return 'sa';
+            return 'general'; // Tự luận: không thuộc 3 dạng trên
+        }
+
+        function buildAutoSections(selectedChunks, isLandscape) {
+            const buckets = { mc: [], tf: [], sa: [], general: [] };
+            selectedChunks.forEach(c => {
+                buckets[classifyQuestionType(c.content)].push(c.content);
+            });
+            // Đếm cả 4 loại (kể cả Tự luận) khi quyết định có nên tự động chia mục hay không.
+            const typesPresent = ['mc', 'tf', 'sa', 'general'].filter(k => buckets[k].length > 0).length;
+            if (typesPresent < 2) {
+                // Không đủ đa dạng để tự chia phần -> để nguyên thứ tự gốc như trước đây
+                return null;
+            }
+
+            const pageBreak = isLandscape ? "\\clearpage\n" : "";
+            let body = "";
+            if (buckets.mc.length > 0) {
+                body += pageBreak + "\\section{PHẦN I. TRẮC NGHIỆM MỘT PHƯƠNG ÁN ĐÚNG}\n\\textit{Thí sinh trả lời các câu hỏi sau. Mỗi câu hỏi chỉ chọn một phương án.}\n\\setcounter{ex}{0}\n\\setcounter{bt}{0}\n\n" + buckets.mc.join("\n\n") + "\n\n";
+            }
+            if (buckets.tf.length > 0) {
+                body += pageBreak + "\\section{PHẦN II. TRẮC NGHIỆM ĐÚNG--SAI}\n\\textit{Trong mỗi ý a), b), c), d), thí sinh chọn đúng hoặc sai.}\n\\setcounter{ex}{0}\n\\setcounter{bt}{0}\n\n" + buckets.tf.join("\n\n") + "\n\n";
+            }
+            if (buckets.sa.length > 0) {
+                body += pageBreak + "\\section{PHẦN III. TRẢ LỜI NGẮN}\n\\textit{Thí sinh ghi đáp án vào vị trí được dành sẵn sau mỗi câu hỏi.}\n\\setcounter{ex}{0}\n\\setcounter{bt}{0}\n\n" + buckets.sa.join("\n\n") + "\n\n";
+            }
+            if (buckets.general.length > 0) {
+                body += pageBreak + "\\section{PHẦN IV. TỰ LUẬN}\n\\setcounter{ex}{0}\n\\setcounter{bt}{0}\n\n" + buckets.general.join("\n\n") + "\n\n";
+            }
+            return body;
+        }
+
+        // ============ PHÂN LOẠI MỨC ĐỘ THEO ID (chỉ dùng khi tạo Chuyên Đề) ============
+        // ID chuẩn hiện nay có dạng [xDy?z-n] (VD: [1D5V1-3], [1D5H2-3]...) đặt ngay sau \begin{ex}/\begin{bt},
+        // trong đó chữ số NGAY TRƯỚC dấu "-" cuối cùng là mức độ: 1=Nhận biết, 2=Thông hiểu, 3=Vận dụng, 4=Vận dụng cao.
+        const LEVEL_LABELS = { 1: 'Nhận biết', 2: 'Thông hiểu', 3: 'Vận dụng', 4: 'Vận dụng cao' };
+
+        function extractLevelFromChunk(content) {
+            // Chỉ tìm trong ~150 ký tự đầu (ID luôn nằm ngay sau \begin{ex}/\begin{bt}) để tránh nhầm với
+            // ký hiệu khoảng số kiểu $[40;50)$ trong thân câu hỏi (những ký hiệu đó có dấu ";"/khoảng trắng
+            // nên không khớp với bộ ký tự chữ-số-gạch ngang dưới đây).
+            const head = content.slice(0, 150);
+            const idMatch = head.match(/\[([0-9A-Za-z]+-[0-9A-Za-z]+|[0-9A-Za-z]{3,})\]/);
+            if (!idMatch) return null;
+            const beforeDash = idMatch[1].split('-')[0];
+            const digitMatch = beforeDash.match(/(\d)(?!.*\d)/);
+            if (!digitMatch) return null;
+            const level = parseInt(digitMatch[1], 10);
+            return (level >= 1 && level <= 4) ? level : null;
+        }
+
+        // Chèn nhãn mức độ làm tham số tùy chọn ngay sau \begin{ex}/\begin{bt} đầu chunk (ghi đè nếu đã có sẵn)
+        function injectLevelLabel(content, label) {
+            return content.replace(/^(\\begin\{(ex|bt)\})(\[[^\]]*\])?/, (m, beginTag) => beginTag + '[' + label + ']');
+        }
+
+        // Sắp xếp các câu theo mức độ tăng dần (câu không nhận diện được ID giữ nguyên thứ tự tương đối,
+        // xếp sau cùng) và chèn nhãn mức độ vào các câu có ID. Trả về mảng chunk MỚI, không sửa parsedChunks gốc.
+        function applyLevelClassification(chunks) {
+            const withLevel = chunks.map((c, idx) => {
+                const level = extractLevelFromChunk(c.content);
+                return {
+                    ...c,
+                    content: level ? injectLevelLabel(c.content, LEVEL_LABELS[level]) : c.content,
+                    __level: level,
+                    __originalIndex: idx
+                };
+            });
+            withLevel.sort((a, b) => {
+                const la = a.__level == null ? 99 : a.__level;
+                const lb = b.__level == null ? 99 : b.__level;
+                if (la !== lb) return la - lb;
+                return a.__originalIndex - b.__originalIndex;
+            });
+            return withLevel;
+        }
+
+        // ============ TRÌNH CHIẾU THÔNG MINH (chỉ dùng cho Chuyên Đề, bố cục Ngang 16:9) ============
+        // Tách 1 chunk "\begin{ex/bt}[...]... \loigiai{...} \end{ex/bt}" thành phần câu hỏi (question)
+        // và phần lời giải (solution, lấy đúng nội dung bên trong \loigiai bằng cách đếm độ sâu ngoặc {}
+        // để xử lý đúng cả khi lời giải chứa các nhóm ngoặc lồng nhau như \dfrac{a}{b}).
+        function splitQuestionAndSolution(content) {
+            const openMatch = content.match(/^\\begin\{(ex|bt)\}(\[[^\]]*\])?/);
+            if (!openMatch) return { envName: null, question: content.trim(), solution: null };
+            const envName = openMatch[1];
+            let body = content.slice(openMatch[0].length);
+            const endTagRe = new RegExp('\\\\end\\{' + envName + '\\}\\s*$');
+            body = body.replace(endTagRe, '');
+
+            const loigiaiMatch = body.match(/\\loigiai(\[[^\]]*\])?\s*\{/);
+            if (!loigiaiMatch) {
+                return { envName, question: body.trim(), solution: null };
+            }
+            const braceStart = loigiaiMatch.index + loigiaiMatch[0].length;
+            let depth = 1, i = braceStart;
+            while (i < body.length && depth > 0) {
+                if (body[i] === '{') depth++;
+                else if (body[i] === '}') depth--;
+                i++;
+            }
+            const solutionBody = body.slice(braceStart, i - 1).trim();
+            const questionBody = (body.slice(0, loigiaiMatch.index) + body.slice(i)).trim();
+            return { envName, question: questionBody, solution: solutionBody.length > 0 ? solutionBody : null };
+        }
+
+        // Xây phần thân tài liệu cho "Trình chiếu thông minh": in hết TẤT CẢ câu hỏi trước (mỗi câu 1 trang,
+        // nhãn câu là link nhảy sang lời giải), rồi tới TẤT CẢ lời giải (nhãn lời giải link quay lại câu hỏi).
+        function buildSmartPresentation(chunks) {
+            let questionsBody = '';
+            let solutionsBody = '';
+            let solutionCount = 0;
+            chunks.forEach((c, idx) => {
+                const num = idx + 1;
+                const { question, solution } = splitQuestionAndSolution(c.content);
+                const hasSol = solution !== null;
+                questionsBody += `\\begin{qslide}{${num}}{${hasSol ? 1 : 0}}\n${question}\n\\end{qslide}\n\n`;
+                if (hasSol) {
+                    solutionCount++;
+                    solutionsBody += `\\begin{aslide}{${num}}\n${solution}\n\\end{aslide}\n\n`;
+                }
+            });
+            let body = questionsBody;
+            if (solutionCount > 0) {
+                body += `\\clearpage\n\\begin{center}\\Huge\\bfseries --- PHẦN LỜI GIẢI ---\\end{center}\n\\vfill\n\n${solutionsBody}`;
+            }
+            return { body, solutionCount, total: chunks.length };
+        }
+
+        const getTopicPreamble = (solMode, templateId, layout, teacherName, writingStyle, compactPrint) => {
             const tpl = getTopicTemplate(templateId);
             const isLandscape = String(layout) === '1';
-            const teacherSafe = escapeLatex(teacherName) || "Vũ Tiến Lực - NHC";
+            const teacherSafe = escapeLatex(teacherName) || "Vũ Tiến Lực - 0969068849";
             const isGridStyle = String(writingStyle) === '1';
 
             // Phần trống để học sinh làm bài, luôn đẩy xuống cuối trang bằng 1 lần \vspace*{\fill}
@@ -652,11 +924,16 @@
         \\draw[gray!10,line width=0.1pt] (0,0) grid[step=0.5cm] (\\linewidth,5.5cm);
     \\end{tikzpicture}` : `
     \\vspace*{\\fill}
-    \\foreach \\n in {1,...,6} {\\noindent\\textcolor{gray!15}{\\rule{\\linewidth}{0.2pt}}\\par\\vspace{0.9cm}}`;
+    \\foreach \\n in {1,...,12} {\\noindent\\textcolor{gray!15}{\\rule{\\linewidth}{0.2pt}}\\par\\vspace{0.45cm}}`;
 
+            // Chế độ "In tiết kiệm giấy" (chỉ áp dụng bố cục Dọc A4 - Phiếu học tập): thu hẹp lề gần sát mép
+            // nhất có thể mà hầu hết máy in gia đình/văn phòng vẫn in được (không phải in tràn lề/borderless),
+            // dùng includeheadfoot để đầu/chân trang không bị chèn ra ngoài lề hoặc đè lên nội dung.
             const geometryLine = isLandscape
                 ? "\\usepackage[paperwidth=33.867cm,paperheight=19.05cm,margin=1.8cm,headsep=6mm,footskip=8mm]{geometry}"
-                : "\\usepackage[left=2cm,right=2cm,top=2cm,bottom=2cm,headsep=6mm,footskip=8mm]{geometry}";
+                : (compactPrint
+                    ? "\\usepackage[includeheadfoot,left=0.8cm,right=0.8cm,top=1cm,bottom=1cm,headsep=3mm,footskip=5mm]{geometry}"
+                    : "\\usepackage[left=2cm,right=2cm,top=2cm,bottom=2cm,headsep=6mm,footskip=8mm]{geometry}");
 
             const fontSizeBlock = isLandscape ? `
 % --- Phóng to cỡ chữ toàn tài liệu cho phù hợp trình chiếu (không cần gói extsizes) ---
@@ -672,13 +949,17 @@
 \\normalsize
 ` : "";
 
+            // Nhãn mức độ (Nhận biết/Thông hiểu/Vận dụng/Vận dụng cao) truyền qua tham số tùy chọn #1 của
+            // \begin{ex}[...]/\begin{bt}[...] khi tính năng "Phân mức theo ID" được bật; rỗng thì không hiện gì.
+            const levelBadge = `\\ifstrempty{#1}{}{\\;{\\small\\bfseries\\color{${tpl.primary}!70!${tpl.mixWith}}[#1]}}`;
+
             const exEnv = isLandscape ? `
 \\newcounter{ex}
 \\newenvironment{ex}[1][]{
     \\clearpage
     \\refstepcounter{ex}
     \\bfseries
-    \\noindent{\\Large\\color{${tpl.primary}!80!black}${tpl.questionIcon}}\\;{\\Large\\bfseries\\color{${tpl.primary}!90!black}Bài \\theex.}\\enspace\\ignorespaces
+    \\noindent{\\Large\\color{${tpl.primary}!80!${tpl.mixWith}}${tpl.questionIcon}}\\;{\\Large\\bfseries\\color{${tpl.primary}!90!${tpl.mixWith}}Bài \\theex.}${levelBadge}\\enspace\\ignorespaces
 }{
     \\par${writingAreaBlock}
 }` : `
@@ -686,7 +967,7 @@
 \\newenvironment{ex}[1][]{
     \\par\\addvspace{8pt}
     \\refstepcounter{ex}
-    \\noindent{\\color{${tpl.primary}!80!black}${tpl.questionIcon}}\\;\\textbf{\\color{${tpl.primary}!90!black}Bài \\theex.}\\enspace\\ignorespaces
+    \\noindent{\\color{${tpl.primary}!80!${tpl.mixWith}}${tpl.questionIcon}}\\;\\textbf{\\color{${tpl.primary}!90!${tpl.mixWith}}Bài \\theex.}${levelBadge}\\enspace\\ignorespaces
 }{
     \\par\\addvspace{4pt}
 }`;
@@ -697,7 +978,7 @@
     \\clearpage
     \\refstepcounter{bt}
     \\bfseries
-    \\noindent{\\Large\\color{${tpl.primary}!80!black}${tpl.questionIcon}}\\;{\\Large\\bfseries\\color{${tpl.primary}!90!black}Bài \\thebt.}\\enspace\\ignorespaces
+    \\noindent{\\Large\\color{${tpl.primary}!80!${tpl.mixWith}}${tpl.questionIcon}}\\;{\\Large\\bfseries\\color{${tpl.primary}!90!${tpl.mixWith}}Bài \\thebt.}${levelBadge}\\enspace\\ignorespaces
 }{
     \\par${writingAreaBlock}
 }` : `
@@ -705,10 +986,39 @@
 \\newenvironment{bt}[1][]{
     \\par\\addvspace{8pt}
     \\refstepcounter{bt}
-    \\noindent{\\color{${tpl.primary}!80!black}${tpl.questionIcon}}\\;\\textbf{\\color{${tpl.primary}!90!black}Bài \\thebt.}\\enspace\\ignorespaces
+    \\noindent{\\color{${tpl.primary}!80!${tpl.mixWith}}${tpl.questionIcon}}\\;\\textbf{\\color{${tpl.primary}!90!${tpl.mixWith}}Bài \\thebt.}${levelBadge}\\enspace\\ignorespaces
 }{
     \\par\\addvspace{4pt}
 }`;
+
+            const darkThemeBlock = tpl.dark ? `
+\\pagecolor{${tpl.pageBg}}
+\\color{${tpl.textColor}}
+\\boldmath
+\\everymath{\\color{${tpl.mathColor}}}
+\\everydisplay{\\color{${tpl.mathColor}}}
+` : "";
+
+            // Môi trường riêng cho "Trình chiếu thông minh": câu hỏi và lời giải nằm trên các trang riêng biệt,
+            // nhãn câu (Bài #1.) là 1 liên kết nhảy sang trang lời giải tương ứng và ngược lại (\hyperlink/\hypertarget).
+            // Vùng có thể click CHỈ đúng phần nhãn (không phải cả trang) vì \hyperlink chỉ bọc quanh đúng văn bản đó.
+            const smartPresentEnv = isLandscape ? `
+\\usepackage[hidelinks]{hyperref}
+\\newenvironment{qslide}[2]{
+    \\clearpage
+    \\hypertarget{q#1}{}%
+    \\bfseries
+    \\noindent{\\Large\\color{${tpl.primary}!80!${tpl.mixWith}}${tpl.questionIcon}}\\;{\\Large\\bfseries\\color{${tpl.primary}!90!${tpl.mixWith}}\\ifnum#2=1 \\hyperlink{sol#1}{\\underline{Bài #1.}}\\else Bài #1.\\fi}\\enspace\\ignorespaces
+}{
+    \\par${writingAreaBlock}
+}
+\\newenvironment{aslide}[1]{
+    \\clearpage
+    \\hypertarget{sol#1}{}%
+    \\noindent{\\Large\\color{${tpl.primary}!80!${tpl.mixWith}}${tpl.solutionIcon}}\\;{\\Large\\bfseries\\color{${tpl.primary}!90!${tpl.mixWith}}\\hyperlink{q#1}{\\underline{Lời giải Bài #1.}}}\\par\\vspace{0.5cm}
+}{
+    \\par\\vspace{1cm}
+}` : "";
 
             return `\\documentclass[11pt${isLandscape ? '' : ',a4paper'}]{article}
 \\usepackage[utf8]{vietnam}
@@ -722,17 +1032,20 @@ ${geometryLine}
 \\usepackage{graphicx}
 \\usepackage{fancyhdr}
 \\usepackage{lastpage}
+\\usepackage{etoolbox}
 \\usepackage{tikz,tkz-euclide,tkz-tab}
 \\usetikzlibrary{angles,intersections,shapes.geometric,arrows,decorations.markings,arrows.meta,patterns.meta,shadows.blur,patterns,quotes,bending,matrix}
 \\usepackage{tikz-3dplot}
 ${fontSizeBlock}
 \\def\\solmode{${solMode}}
+${darkThemeBlock}
 ${exEnv}
 ${btEnv}
+${smartPresentEnv}
 
 \\newbox\\solbox
 \\newcommand{\\loigiai}[2][]{%
-    \\ifcase\\solmode
+    \\ifcase\\solmode\\relax
     \\or${isLandscape ? "" : `
         \\setbox\\solbox=\\vbox{\\parindent=0pt\\hsize=\\linewidth #2}%
         \\pgfmathsetmacro{\\numlines}{int(max(2, \\ht\\solbox/18pt + 1))}%
@@ -741,17 +1054,65 @@ ${btEnv}
         \\par\\vspace{2pt}`}
     \\or
         \\begin{tcolorbox}[
-            enhanced,breakable,colback=${tpl.solBoxBg},colframe=${tpl.primary}!70!black,
+            enhanced,breakable,colback=${tpl.solBoxBg},colframe=${tpl.primary}!70!${tpl.mixWith},
             title={${tpl.solutionIcon}\\quad Lời giải chi tiết},fonttitle=\\bfseries,
             boxrule=0.8pt,arc=2mm,left=3mm,right=3mm,top=2mm,bottom=2mm,
             before skip=6pt,after skip=6pt,
-            coltitle=white,
-            boxed title style={colback=${tpl.primary}!80!black,boxrule=0pt}
+            coltitle=${tpl.dark ? "black" : "white"},
+            boxed title style={colback=${tpl.primary}!80!${tpl.mixWith},boxrule=0pt}
         ]
             #2
         \\end{tcolorbox}
     \\fi
 }
+
+% --- Hỗ trợ tự động khi đề có đủ 3 loại câu: trắc nghiệm, đúng-sai, trả lời ngắn ---
+\\newcommand{\\choice}[4]{
+    \\par\\medskip\\noindent
+    \\begin{tabular}{@{}p{0.47\\linewidth}@{\\hspace{4mm}}p{0.47\\linewidth}@{}}
+        \\textbf{A.}~#1 & \\textbf{B.}~#2\\\\[7pt]
+        \\textbf{C.}~#3 & \\textbf{D.}~#4
+    \\end{tabular}\\par\\smallskip
+}
+\\newcommand{\\choicefour}[4]{
+    \\par\\medskip\\noindent
+    \\begin{tabular}{@{}p{0.22\\linewidth}@{\\hspace{3mm}}p{0.22\\linewidth}@{\\hspace{3mm}}p{0.22\\linewidth}@{\\hspace{3mm}}p{0.22\\linewidth}@{}}
+        \\textbf{A.}~#1 & \\textbf{B.}~#2 & \\textbf{C.}~#3 & \\textbf{D.}~#4
+    \\end{tabular}\\par\\smallskip
+}
+\\newcommand{\\choiceone}[4]{
+    \\begin{enumerate}[label=\\textbf{\\Alph*.},leftmargin=9mm,labelsep=2mm,itemsep=0pt,topsep=2pt]
+        \\item #1 \\item #2 \\item #3 \\item #4
+    \\end{enumerate}
+}
+\\newcommand{\\choiceTF}[4]{
+    \\begin{enumerate}[label=\\textbf{\\alph*)},leftmargin=8mm,labelsep=2mm,itemsep=0pt,topsep=2pt]
+        \\item #1
+        \\item #2
+        \\item #3
+        \\item #4
+    \\end{enumerate}
+}
+\\newenvironment{itemchoice}{
+    \\begin{enumerate}[label=\\textbf{\\alph*)},leftmargin=1cm,itemsep=2pt]
+}{
+    \\end{enumerate}
+}
+\\newcommand{\\itemch}{\\item}
+\\newcommand{\\True}{\\ifcase\\solmode\\relax \\or \\or \\textcolor{${tpl.primary}!55!${tpl.mixWith}}{\\faCheckCircle}\\;\\fi}
+\\newcommand{\\shortans}[2][]{%
+    \\par\\nobreak\\smallskip\\noindent\\textbf{Đáp số: }%
+    \\ifcase\\solmode\\relax
+        \\makebox[4cm]{\\dotfill}%
+    \\or
+        \\makebox[4cm]{\\dotfill}%
+    \\or
+        \\tcbox[colback=${tpl.dark ? tpl.primary + "!15!black" : tpl.primary + "!8"},colframe=${tpl.primary}!55!${tpl.mixWith},boxrule=.5pt,arc=1mm,left=2mm,right=2mm,top=.5mm,bottom=.5mm]{\\textcolor{${tpl.primary}!45!${tpl.mixWith}}{\\textbf{#2}}}%
+    \\fi
+}
+\\usepackage{titlesec}
+\\titleformat{\\section}{\\large\\bfseries\\sffamily\\color{${tpl.primary}!70!${tpl.mixWith}}}{}{0pt}{}[\\vspace{2pt}\\titlerule]
+\\titlespacing*{\\section}{0pt}{10pt}{6pt}
 
 \\newcommand{\\immini}[3][]{
     \\par\\noindent
@@ -775,26 +1136,45 @@ ${btEnv}
 \\pagestyle{fancy}
 \\fancyhf{}
 \\fancyhead[L]{\\small\\sffamily\\bfseries ${tpl.accentIcon}\\ PHIẾU HỌC TẬP \\& CHUYÊN ĐỀ TOÁN HỌC}
-\\fancyhead[R]{\\small\\sffamily\\color{${tpl.primary}!60!black} GV: ${teacherSafe}}
-\\fancyfoot[C]{\\small\\sffamily Trang \\thepage/\\pageref{LastPage}}
+\\fancyhead[R]{\\small\\sffamily\\color{${tpl.primary}!60!${tpl.mixWith}} GV: ${teacherSafe}}
+\\fancyfoot[C]{\\small\\sffamily Trang \\thepage}
 \\renewcommand{\\headrulewidth}{0.5pt}
 \\renewcommand{\\footrulewidth}{0.4pt}
 \\setlength{\\headheight}{16pt}`;
         };
 
-        const getTopicHeader = (templateId, layout, topicTitle, teacherName) => {
+        const getTopicHeader = (templateId, layout, topicTitle, teacherName, minimalHeader, lessonName) => {
             const tpl = getTopicTemplate(templateId);
             const isLandscape = String(layout) === '1';
-            const titleSafe = escapeLatex(topicTitle) || "LUYỆN TẬP TOÁN HỌC";
-            const teacherSafe = escapeLatex(teacherName) || "Vũ Tiến Lực - NHC";
+            // Không có fallback mặc định nữa: để trống Tên chủ đề thì KHÔNG in dòng "CHUYÊN ĐỀ: ..." trong phiếu.
+            const titleSafe = escapeLatex(topicTitle);
+            const teacherSafe = escapeLatex(teacherName) || "Vũ Tiến Lực - 0969068849";
+            const lessonSafe = escapeLatex(lessonName);
+            const badgeText = tpl.dark ? "black" : "white";
+            const badgeCore = `\\bfseries\\sffamily\\colorbox{${tpl.primary}}{\\textcolor{${badgeText}}{\\ \\faBookOpen\\ BÀI: ${lessonSafe}\\ }}`;
+            const titleLineBig = `{\\Huge\\bfseries\\sffamily\\color{${tpl.primary}!85!${tpl.mixWith}}CHUYÊN ĐỀ: ${titleSafe}}`;
+            const titleLineSmall = `{\\large\\bfseries\\color{${tpl.primary}!80!${tpl.mixWith}}${tpl.accentIcon}\\ CHUYÊN ĐỀ: ${titleSafe}}`;
 
             if (isLandscape) {
+                if (minimalHeader) {
+                    // Chế độ tối giản: chỉ in Chủ đề/Bài (nếu có), bỏ tên trường, GV, ô Họ tên/Lớp/Buổi.
+                    const lines = [`{\\Huge\\color{${tpl.primary}!80!${tpl.mixWith}}${tpl.accentIcon}}`];
+                    if (titleSafe) lines.push(titleLineBig);
+                    if (lessonSafe) lines.push(`{\\Large ${badgeCore}}`);
+                    return `\\begin{center}
+    \\vspace*{2.2cm}
+    ${lines.join('\\\\[0.6cm]\n    ')}
+\\end{center}
+\\vfill`;
+                }
                 // Trang bìa cỡ lớn, canh giữa, dành cho trình chiếu - trang câu hỏi đầu tiên
                 // sẽ tự \clearpage sang trang mới (đã xử lý trong môi trường ex/bt).
+                const topLines = [`{\\Huge\\color{${tpl.primary}!80!${tpl.mixWith}}${tpl.accentIcon}}`];
+                if (titleSafe) topLines.push(titleLineBig);
+                if (lessonSafe) topLines.push(`{\\Large ${badgeCore}}`);
                 return `\\begin{center}
     \\vspace*{1.5cm}
-    {\\Huge\\color{${tpl.primary}!80!black}${tpl.accentIcon}}\\\\[0.6cm]
-    {\\Huge\\bfseries\\sffamily\\color{${tpl.primary}!85!black}CHUYÊN ĐỀ: ${titleSafe}}\\\\[0.8cm]
+    ${topLines.join('\\\\[0.6cm]\n    ')}\\\\[0.8cm]
     {\\LARGE\\sffamily GV: ${teacherSafe}}\\\\[0.5cm]
     {\\Large\\sffamily TRƯỜNG THPT NGUYỄN HỮU CẢNH -- TỔ TOÁN}\\\\[1.5cm]
     {\\Large\\faUser\\ Họ và tên: \\dotfill}\\\\[1cm]
@@ -803,16 +1183,36 @@ ${btEnv}
 \\vfill`;
             }
 
+            if (minimalHeader) {
+                // Chế độ tối giản: chỉ in Chủ đề/Bài (nếu có), bỏ tên trường, GV, ô Họ tên/Lớp/Buổi/Đánh giá.
+                const lines = [];
+                lines.push(titleSafe ? titleLineSmall : `{\\large\\color{${tpl.primary}!80!${tpl.mixWith}}${tpl.accentIcon}}`);
+                if (lessonSafe) lines.push(`{${badgeCore}}`);
+                return `\\begin{center}
+    ${lines.join('\\\\[4pt]\n    ')}
+\\end{center}
+\\vspace{8pt}`;
+            }
+
+            // Khối "CHUYÊN ĐỀ" + huy hiệu "BÀI" - chỉ in khi người dùng có nhập tương ứng.
+            let titleAndLesson = "";
+            if (titleSafe && lessonSafe) {
+                titleAndLesson = `\\vspace{2pt}\n        ${titleLineSmall}\\par\\vspace{4pt}\n        {${badgeCore}}`;
+            } else if (titleSafe) {
+                titleAndLesson = `\\vspace{2pt}\n        ${titleLineSmall}`;
+            } else if (lessonSafe) {
+                titleAndLesson = `\\vspace{4pt}\n        {${badgeCore}}`;
+            }
+
             return `\\begin{tcolorbox}[
-    enhanced,colback=${tpl.headerBg},colframe=${tpl.primary}!70!black,boxrule=1.2pt,arc=3mm,
+    enhanced,colback=${tpl.headerBg},colframe=${tpl.primary}!70!${tpl.mixWith},boxrule=1.2pt,arc=3mm,
     left=4mm,right=4mm,top=3mm,bottom=3mm
 ]
     \\begin{minipage}[t]{0.55\\textwidth}
         \\sffamily
         {\\bfseries TRƯỜNG THPT NGUYỄN HỮU CẢNH}\\par
-        {\\small TỔ TOÁN - GV: ${teacherSafe}}\\par
-        \\vspace{2pt}
-        {\\large\\bfseries\\color{${tpl.primary}!80!black}${tpl.accentIcon}\\ CHUYÊN ĐỀ: ${titleSafe}}
+        {\\small Thầy ${teacherSafe}}\\par
+        ${titleAndLesson}
     \\end{minipage}
     \\hfill
     \\begin{minipage}[t]{0.42\\textwidth}
@@ -844,17 +1244,55 @@ ${btEnv}
 
         let parsedChunks = [];
 
-        // File upload handling
-        document.getElementById('fileInput').addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                document.getElementById('inputLatex').value = e.target.result;
-                showToast("Đã tải file thành công!");
+        // File upload handling (hỗ trợ chọn nhiều file .tex/.txt hoặc cả thư mục)
+        function readFileAsText(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = (ev) => resolve(ev.target.result);
+                reader.onerror = () => reject(new Error("Không đọc được file: " + file.name));
+                reader.readAsText(file);
+            });
+        }
+
+        async function loadTexFiles(fileList) {
+            const allFiles = Array.from(fileList || []);
+            const texFiles = allFiles.filter(f => /\.(tex|txt)$/i.test(f.name));
+            if (texFiles.length === 0) {
+                showToast(allFiles.length > 0
+                    ? "Không tìm thấy file .tex/.txt nào trong lựa chọn!"
+                    : "Chưa chọn file nào!");
+                return;
+            }
+            // Sắp xếp theo đường dẫn tương đối (khi tải cả thư mục) hoặc theo tên file để có thứ tự ổn định
+            texFiles.sort((a, b) => {
+                const pa = a.webkitRelativePath || a.name;
+                const pb = b.webkitRelativePath || b.name;
+                return pa.localeCompare(pb, 'vi');
+            });
+            try {
+                const contents = await Promise.all(texFiles.map(readFileAsText));
+                const combined = texFiles.map((f, i) => {
+                    const label = f.webkitRelativePath || f.name;
+                    return `% ===== ${label} =====\n${contents[i]}`;
+                }).join('\n\n');
+                document.getElementById('inputLatex').value = combined;
+                showToast(texFiles.length === 1
+                    ? "Đã tải file thành công!"
+                    : `Đã tải và gộp ${texFiles.length} file thành công!`);
                 parseContent();
-            };
-            reader.readAsText(file);
+            } catch (err) {
+                showToast("Có lỗi khi đọc file, vui lòng thử lại!");
+            }
+        }
+
+        document.getElementById('fileInput').addEventListener('change', function(e) {
+            loadTexFiles(e.target.files);
+            e.target.value = ''; // reset để có thể chọn lại cùng file/nhóm file lần sau
+        });
+
+        document.getElementById('folderInput').addEventListener('change', function(e) {
+            loadTexFiles(e.target.files);
+            e.target.value = '';
         });
 
         // Mode switch handling
@@ -900,8 +1338,79 @@ ${btEnv}
 
         function updateSelectionCount() {
             const selected = parsedChunks.filter(c => c.selected).length;
-            document.getElementById('selectionCount').innerText = `${selected} / ${parsedChunks.length} mục`;
+            const raw = getActiveFilterText();
+            if (raw) {
+                const visibleSelected = getVisibleSelectedChunks().length;
+                const visible = document.querySelectorAll('#previewContainer .chunk-item:not(.hidden)').length;
+                document.getElementById('selectionCount').innerText = `${selected} / ${parsedChunks.length} mục (lọc: ${visible} hiển thị, ${visibleSelected} sẽ được tạo)`;
+            } else {
+                document.getElementById('selectionCount').innerText = `${selected} / ${parsedChunks.length} mục`;
+            }
         }
+
+        // Lấy nội dung ô lọc hiện tại (đã chuẩn hóa chữ thường, cắt khoảng trắng)
+        function getActiveFilterText() {
+            const filterInput = document.getElementById('chunkFilterInput');
+            return filterInput ? filterInput.value.trim().toLowerCase() : '';
+        }
+
+        // Tách chuỗi lọc thành nhiều từ khóa theo dấu phẩy, bỏ khoảng trắng thừa và từ khóa rỗng
+        function getFilterKeywords(raw) {
+            return raw.split(',').map(k => k.trim()).filter(k => k.length > 0);
+        }
+
+        // Một mục chỉ được coi là khớp khi chứa ĐỦ TẤT CẢ các từ khóa/ID đã tách (quan hệ VÀ)
+        function matchesFilterKeywords(searchText, raw) {
+            const keywords = getFilterKeywords(raw);
+            if (keywords.length === 0) return true;
+            return keywords.every(k => searchText.includes(k));
+        }
+
+        // Danh sách câu/bài sẽ được dùng để tạo file: phải vừa được TICK CHỌN vừa khớp bộ lọc đang gõ
+        // (nếu ô lọc đang trống thì coi như không lọc, lấy toàn bộ mục đã chọn như trước đây)
+        function getVisibleSelectedChunks() {
+            const raw = getActiveFilterText();
+            return parsedChunks.filter(c => c.selected && matchesFilterKeywords(c.searchText || '', raw));
+        }
+
+        // Lọc danh sách câu hỏi/bài tập theo ID (số thứ tự, VD "3") hoặc theo cụm văn bản có trong nội dung.
+        // Hỗ trợ nhiều từ khóa cách nhau bởi dấu phẩy (VD: "tam giác, m=2") - mục chỉ hiện khi chứa ĐỦ TẤT CẢ từ khóa.
+        // Lưu ý: chỉ những mục vừa khớp bộ lọc này vừa đang được tick chọn mới được đưa vào lúc "Tạo File Main.tex".
+        function filterChunks() {
+            const raw = getActiveFilterText();
+            document.getElementById('chunkFilterClear').classList.toggle('hidden', raw.length === 0);
+
+            const items = document.querySelectorAll('#previewContainer .chunk-item');
+            let visibleCount = 0;
+            items.forEach(el => {
+                const haystack = el.getAttribute('data-chunk-search') || '';
+                const match = matchesFilterKeywords(haystack, raw);
+                el.classList.toggle('hidden', !match);
+                if (match) visibleCount++;
+            });
+
+            let emptyMsg = document.getElementById('chunkFilterEmpty');
+            if (items.length > 0 && raw !== '' && visibleCount === 0) {
+                if (!emptyMsg) {
+                    emptyMsg = document.createElement('p');
+                    emptyMsg.id = 'chunkFilterEmpty';
+                    emptyMsg.className = 'text-sm text-gray-400 italic text-center mt-5';
+                    emptyMsg.innerText = 'Không có mục nào khớp với từ khóa lọc.';
+                    document.getElementById('previewContainer').appendChild(emptyMsg);
+                }
+            } else if (emptyMsg) {
+                emptyMsg.remove();
+            }
+
+            updateSelectionCount();
+        }
+
+        function clearChunkFilter() {
+            document.getElementById('chunkFilterInput').value = '';
+            filterChunks();
+        }
+
+        document.getElementById('chunkFilterInput').addEventListener('input', filterChunks);
 
         function showToast(message) {
             const toast = document.getElementById('toast');
@@ -918,6 +1427,10 @@ ${btEnv}
             const container = document.getElementById("previewContainer");
             container.innerHTML = "";
             parsedChunks = [];
+            const filterInputEl = document.getElementById('chunkFilterInput');
+            if (filterInputEl) filterInputEl.value = '';
+            const filterClearEl = document.getElementById('chunkFilterClear');
+            if (filterClearEl) filterClearEl.classList.add('hidden');
 
             if (!input.trim()) {
                 container.innerHTML = "<p class='text-sm text-gray-500 italic text-center mt-5'>Vui lòng nhập nội dung trước khi phân tích.</p>";
@@ -950,12 +1463,22 @@ ${btEnv}
                 return;
             }
 
+            const typeCounters = {};
             parsedChunks.forEach(chunk => {
+                typeCounters[chunk.type] = (typeCounters[chunk.type] || 0) + 1;
+                const typeIndex = typeCounters[chunk.type];
+
                 let previewText = chunk.content.substring(0, 150).replace(/</g, "&lt;").replace(/>/g, "&gt;") + "...";
-                let title = mode === 'tikz' ? `Hình ${chunk.id + 1}` : (chunk.type === 'ex' ? `Câu Hỏi` : `Bài Tập`);
+                let title = mode === 'tikz' ? `Hình ${typeIndex}` : (chunk.type === 'ex' ? `Câu Hỏi ${typeIndex}` : `Bài Tập ${typeIndex}`);
+
+                // Chuỗi dùng để lọc: số thứ tự theo loại, số thứ tự toàn cục, tiêu đề và toàn bộ nội dung LaTeX.
+                // Lưu trực tiếp vào chunk (không chỉ vào DOM) để lúc "Tạo File Main.tex" cũng dùng chung 1 tiêu chí lọc.
+                chunk.title = title;
+                chunk.searchText = `${title} ${chunk.id + 1} ${chunk.content}`.toLowerCase();
 
                 let div = document.createElement("div");
-                div.className = "flex items-start gap-3 p-3 bg-white border border-gray-200 rounded-lg hover:border-blue-400 transition-colors cursor-pointer shadow-sm";
+                div.className = "chunk-item flex items-start gap-3 p-3 bg-white border border-gray-200 rounded-lg hover:border-blue-400 transition-colors cursor-pointer shadow-sm";
+                div.setAttribute('data-chunk-search', chunk.searchText);
                 div.innerHTML = `
                     <div class="flex-shrink-0 mt-1">
                         <input type="checkbox" id="chk_${chunk.id}" checked class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 cursor-pointer">
@@ -979,10 +1502,14 @@ ${btEnv}
         function generateLatex() {
             const mode = document.getElementById("modeSelect").value;
             let output = "";
+            let successMsg = "Tạo mã LaTeX thành công!";
 
-            const selectedChunks = parsedChunks.filter(c => c.selected);
+            // Nếu đang gõ bộ lọc, chỉ lấy những câu vừa được TICK CHỌN vừa khớp bộ lọc hiện tại
+            const selectedChunks = getVisibleSelectedChunks();
             if (selectedChunks.length === 0) {
-                showToast("Vui lòng chọn ít nhất 1 mục để tạo file!");
+                showToast(getActiveFilterText()
+                    ? "Không có mục nào vừa được chọn vừa khớp bộ lọc hiện tại!"
+                    : "Vui lòng chọn ít nhất 1 mục để tạo file!");
                 return;
             }
 
@@ -1019,24 +1546,79 @@ ${btEnv}
                 output = getExamPreamble(examSolMode) + "\n\\begin{document}\n\n" + examHeader + "\n\n" + bodyContent + examFooter + "\n\\end{document}";
             } else if (mode === 'essay') {
                 const essaySolMode = document.getElementById("essaySolutionMode").value;
-                let bodyContent = selectedChunks.map(c => c.content).join("\n\n");
+                const autoSectionsEssay = buildAutoSections(selectedChunks, false);
+                let bodyContent = autoSectionsEssay !== null ? autoSectionsEssay : selectedChunks.map(c => c.content).join("\n\n");
                 let finalBody = essayHeader + "\n\n\\setcounter{ex}{0}\n\\setcounter{bt}{0}\n\n" + bodyContent + "\n\n" + examFooter;
                 output = getEssayPreamble(essaySolMode) + "\n\\begin{document}\n\n" + finalBody + "\n\n\\end{document}";
+                if (autoSectionsEssay !== null) successMsg = "Đã nhận diện đủ các loại câu, tự động chia phần theo định dạng chuẩn!";
             } else if (mode === 'topic') {
                 const topicSolMode = document.getElementById("essaySolutionMode").value;
                 const topicTemplateId = document.getElementById("topicTemplate").value;
                 const topicLayout = document.getElementById("topicLayout").value;
                 const topicWritingStyle = document.getElementById("topicWritingStyle").value;
                 const topicTitle = document.getElementById("topicTitleInput").value;
+                const topicLesson = document.getElementById("topicLessonInput").value;
                 const topicTeacher = document.getElementById("topicTeacherInput").value;
-                const topicFooter = (topicLayout === '1') ? topicLandscapeFooter : examFooter;
-                let bodyContent = selectedChunks.map(c => c.content).join("\n\n");
-                let finalBody = getTopicHeader(topicTemplateId, topicLayout, topicTitle, topicTeacher) + "\n\n\\setcounter{ex}{0}\n\\setcounter{bt}{0}\n\n" + bodyContent + "\n\n" + topicFooter;
-                output = getTopicPreamble(topicSolMode, topicTemplateId, topicLayout, topicTeacher, topicWritingStyle) + "\n\\begin{document}\n\n" + finalBody + "\n\n\\end{document}";
+                const topicFooter = (topicLayout === '1') ? topicLandscapeFooter : "";
+
+                const topicMinimalHeader = document.getElementById("topicMinimalHeader").checked;
+                const topicCompactPrint = document.getElementById("topicCompactPrint").checked;
+                const topicStartPageRaw = document.getElementById("topicStartPage").value;
+                const topicStartPageNum = parseInt(topicStartPageRaw, 10);
+                const topicStartPage = (topicStartPageRaw !== "" && !isNaN(topicStartPageNum) && topicStartPageNum > 0) ? topicStartPageNum : null;
+                const pageStartBlock = topicStartPage ? `\\setcounter{page}{${topicStartPage}}\n\n` : "";
+
+                const classifyByLevel = document.getElementById("topicClassifyLevel").checked;
+                let topicChunks = selectedChunks;
+                let levelsFoundCount = 0;
+                if (classifyByLevel) {
+                    topicChunks = applyLevelClassification(selectedChunks);
+                    levelsFoundCount = topicChunks.filter(c => c.__level != null).length;
+                }
+
+                const smartPresentRequested = document.getElementById("topicSmartPresent").checked;
+                const smartPresentActive = smartPresentRequested && topicLayout === '1';
+
+                let bodyContent;
+                let autoSectionsTopic = null;
+                let smartResult = null;
+                if (smartPresentActive) {
+                    smartResult = buildSmartPresentation(topicChunks);
+                    bodyContent = smartResult.body;
+                } else {
+                    autoSectionsTopic = buildAutoSections(topicChunks, topicLayout === '1');
+                    bodyContent = autoSectionsTopic !== null ? autoSectionsTopic : topicChunks.map(c => c.content).join("\n\n");
+                }
+
+                const topicTpl = getTopicTemplate(topicTemplateId);
+                const knowledgeBox = buildKnowledgeBox(topicTpl, topicLayout === '1');
+
+                let finalBody = pageStartBlock + getTopicHeader(topicTemplateId, topicLayout, topicTitle, topicTeacher, topicMinimalHeader, topicLesson) + "\n\n" + knowledgeBox + "\\setcounter{ex}{0}\n\\setcounter{bt}{0}\n\n" + bodyContent + "\n\n" + topicFooter;
+                output = getTopicPreamble(topicSolMode, topicTemplateId, topicLayout, topicTeacher, topicWritingStyle, topicCompactPrint) + "\n\\begin{document}\n\n" + finalBody + "\n\n\\end{document}";
+
+                if (smartPresentActive) {
+                    successMsg = `Đã tạo trình chiếu thông minh: ${smartResult.total} câu hỏi, ${smartResult.solutionCount} câu có liên kết tới lời giải!`;
+                    if (classifyByLevel && levelsFoundCount > 0) {
+                        successMsg += ` (Đã sắp xếp theo mức độ tăng dần, ${levelsFoundCount} câu có ID.)`;
+                    }
+                } else if (smartPresentRequested && topicLayout !== '1') {
+                    successMsg = "Trình chiếu thông minh chỉ áp dụng cho bố cục Ngang 16:9 - đã tạo theo bố cục thường.";
+                } else if (classifyByLevel && levelsFoundCount > 0 && autoSectionsTopic !== null) {
+                    successMsg = `Đã nhận diện đủ các loại câu (tự chia phần) và sắp xếp ${levelsFoundCount} câu có ID theo mức độ tăng dần!`;
+                } else if (classifyByLevel && levelsFoundCount > 0) {
+                    successMsg = `Đã sắp xếp ${levelsFoundCount}/${topicChunks.length} câu có ID theo mức độ tăng dần (Nhận biết → Vận dụng cao)!`;
+                } else if (classifyByLevel && levelsFoundCount === 0) {
+                    successMsg = "Không tìm thấy câu nào có ID hợp lệ dạng [...Vz-n] để phân mức, giữ nguyên thứ tự!";
+                } else if (autoSectionsTopic !== null) {
+                    successMsg = "Đã nhận diện đủ các loại câu, tự động chia phần theo định dạng chuẩn!";
+                }
+                if (knowledgeBox) {
+                    successMsg += " Đã chèn phần Kiến Thức Trọng Tâm vào đầu tài liệu.";
+                }
             }
 
             document.getElementById("outputLatex").value = output;
-            showToast("Tạo mã LaTeX thành công!");
+            showToast(successMsg);
         }
 
         // ================== TRỘN ĐỀ 3 PHẦN (THPT QUỐC GIA) ==================
@@ -1173,9 +1755,12 @@ ${btEnv}
                 return;
             }
 
-            const selectedChunks = parsedChunks.filter(c => c.selected);
+            // Nếu đang gõ bộ lọc, chỉ trộn đề từ những câu vừa được TICK CHỌN vừa khớp bộ lọc hiện tại
+            const selectedChunks = getVisibleSelectedChunks();
             if (selectedChunks.length === 0) {
-                showToast("Vui lòng chọn ít nhất 1 câu để trộn đề!");
+                showToast(getActiveFilterText()
+                    ? "Không có câu nào vừa được chọn vừa khớp bộ lọc hiện tại!"
+                    : "Vui lòng chọn ít nhất 1 câu để trộn đề!");
                 return;
             }
 
@@ -1311,6 +1896,27 @@ ${btEnv}
             showToast("Đã tải file main.tex!");
         }
 
+        // Tải riêng nội dung các câu ở cột "Chọn Lọc" đang được TICK CHỌN (và khớp bộ lọc nếu có đang gõ)
+        // ra 1 file .tex thô (chỉ các \begin{ex}/\begin{bt}...\end, KHÔNG kèm preamble/document) để tái sử dụng sau này.
+        function downloadSelectedChunksTex() {
+            const selectedChunks = getVisibleSelectedChunks();
+            if (selectedChunks.length === 0) {
+                showToast(getActiveFilterText()
+                    ? "Không có mục nào vừa được chọn vừa khớp bộ lọc hiện tại!"
+                    : "Vui lòng chọn ít nhất 1 mục để tải!");
+                return;
+            }
+
+            const text = selectedChunks.map(c => c.content).join("\n\n");
+            const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
+            const anchor = document.createElement("a");
+            anchor.download = "cau_da_chon.tex";
+            anchor.href = window.URL.createObjectURL(blob);
+            anchor.click();
+            window.URL.revokeObjectURL(anchor.href);
+            showToast(`Đã tải ${selectedChunks.length} câu đã chọn (.tex)!`);
+        }
+
         // ================== TẠO PROMPT AI - PHIẾU HỌC TẬP ==================
         function openPromptModal() {
             const modal = document.getElementById("promptModal");
@@ -1322,6 +1928,43 @@ ${btEnv}
             const modal = document.getElementById("promptModal");
             modal.classList.add("hidden");
             modal.classList.remove("flex");
+        }
+
+        function openKnowledgeModal() {
+            const modal = document.getElementById("knowledgeModal");
+            modal.classList.remove("hidden");
+            modal.classList.add("flex");
+        }
+
+        function closeKnowledgeModal() {
+            const modal = document.getElementById("knowledgeModal");
+            modal.classList.add("hidden");
+            modal.classList.remove("flex");
+        }
+
+        function clearKnowledgeInput() {
+            document.getElementById("knowledgeInput").value = "";
+            showToast("Đã xóa nội dung Kiến Thức Trọng Tâm!");
+        }
+
+        // Bọc nội dung Kiến Thức Trọng Tâm vào 1 tcolorbox theo đúng màu mẫu (tpl) đang chọn,
+        // dùng chung phong cách với khung "Lời giải chi tiết" để đồng bộ hình ảnh trong tài liệu.
+        function buildKnowledgeBox(tpl, isLandscape) {
+            const raw = document.getElementById("knowledgeInput").value.trim();
+            if (!raw) return "";
+            const pageBreak = isLandscape ? "\\clearpage\n" : "";
+            return `${pageBreak}\\begin{tcolorbox}[
+    enhanced,breakable,colback=${tpl.solBoxBg},colframe=${tpl.primary}!70!${tpl.mixWith},
+    title={\\faLightbulb\\quad KIẾN THỨC TRỌNG TÂM},fonttitle=\\bfseries,
+    boxrule=0.8pt,arc=2mm,left=3mm,right=3mm,top=2mm,bottom=2mm,
+    before skip=8pt,after skip=12pt,
+    coltitle=${tpl.dark ? "black" : "white"},
+    boxed title style={colback=${tpl.primary}!80!${tpl.mixWith},boxrule=0pt}
+]
+${raw}
+\\end{tcolorbox}
+
+`;
         }
 
         function generateWorksheetPrompt() {
